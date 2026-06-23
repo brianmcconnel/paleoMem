@@ -1,26 +1,245 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* paleoMem — reverent dark theme (flowwatch-inspired CSS vars) */
+:root,
+[data-theme='dark'] {
+  /* App surfaces */
+  --pw-bg-app: #0b1118;
+  --pw-bg-elevated: #111a25;
+  --pw-bg-surface: #16202d;
+  --pw-bg-panel: #1a2533;
+  --pw-bg-input: #0f1824;
+
+  /* Text */
+  --pw-text: #e8eef5;
+  --pw-text-soft: #d4dce6;
+  --pw-text-muted: #9aa8bb;
+  --pw-text-subtle: #7c8b9e;
+  --pw-text-faint: #5f6e81;
+
+  /* Borders + accents */
+  --pw-border: #243241;
+  --pw-border-strong: #314556;
+  --pw-accent: #3b82f6;
+  --pw-accent-hover: #60a5fa;
+  --pw-accent-gold: #c5a46e;
+  --pw-accent-gold-hover: #d8b97f;
+  --pw-link: #8ab4ff;
+
+  /* Scripture specific */
+  --pw-hebrew: #f1e9d9;
+  --pw-english: #cbd5e1;
+  --pw-letter-bg: #1f2a3a;
+  --pw-letter-border: #314556;
+  --pw-emoji: #f4d9a3;
+  --pw-meaning: #a3b3c8;
+
+  /* Feedback */
+  --pw-success: #4ade80;
+  --pw-warning: #facc15;
+
+  /* Shadows + overlays */
+  --pw-shadow: rgba(0, 0, 0, 0.55);
+  --pw-modal: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme='light'] {
+  --pw-bg-app: #f7f9fc;
+  --pw-bg-elevated: #ffffff;
+  --pw-bg-surface: #f0f4f9;
+  --pw-bg-panel: #e8edf5;
+  --pw-bg-input: #ffffff;
+
+  --pw-text: #111827;
+  --pw-text-soft: #1f2937;
+  --pw-text-muted: #4b5563;
+  --pw-text-subtle: #6b7280;
+  --pw-text-faint: #9ca3af;
+
+  --pw-border: #d1d5db;
+  --pw-border-strong: #9ca3af;
+  --pw-accent: #2563eb;
+  --pw-accent-hover: #3b82f6;
+  --pw-accent-gold: #a37d44;
+  --pw-accent-gold-hover: #b38d54;
+  --pw-link: #2563eb;
+
+  --pw-hebrew: #1f2937;
+  --pw-english: #334155;
+  --pw-letter-bg: #f8fafc;
+  --pw-letter-border: #cbd5e1;
+  --pw-emoji: #854d0e;
+  --pw-meaning: #475569;
+
+  --pw-success: #16a34a;
+  --pw-warning: #ca8a04;
+
+  --pw-shadow: rgba(15, 23, 42, 0.12);
+  --pw-modal: rgba(15, 23, 42, 0.45);
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  color: var(--pw-text);
+  background-color: var(--pw-bg-app);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.hebrew {
+  font-family:
+    var(--font-noto-hebrew), 'Noto Sans Hebrew', 'David Libre', 'Frank Ruhl Libre', serif;
+  direction: rtl;
+  text-align: right;
+  font-feature-settings: 'kern' 'tnum';
+  letter-spacing: 0.01em;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.scripture-english {
+  font-family: var(--font-geist-sans), Georgia, 'EB Garamond', serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.scripture-hebrew {
+  font-family: var(--font-noto-hebrew), 'Noto Sans Hebrew', serif;
+  font-size: 1.35rem;
+  line-height: 1.7;
+}
+
+.letter {
+  font-family: var(--font-noto-hebrew), 'Noto Sans Hebrew', serif;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.pictograph-meaning {
+  font-size: 0.75rem;
+  line-height: 1.1;
+  color: var(--pw-meaning);
+}
+
+/* Nice cards and sections */
+.card {
+  background: var(--pw-bg-surface);
+  border: 1px solid var(--pw-border);
+  border-radius: 12px;
+}
+
+.panel {
+  background: var(--pw-bg-panel);
+  border: 1px solid var(--pw-border);
+  border-radius: 10px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.1s ease;
+  border: 1px solid var(--pw-border);
+  background: var(--pw-bg-elevated);
+  color: var(--pw-text);
+}
+
+.btn:hover {
+  background: var(--pw-bg-surface);
+  border-color: var(--pw-border-strong);
+}
+
+.btn-primary {
+  background: var(--pw-accent);
+  color: white;
+  border-color: var(--pw-accent);
+}
+
+.btn-primary:hover {
+  background: var(--pw-accent-hover);
+}
+
+.btn-gold {
+  background: var(--pw-accent-gold);
+  color: #1a2533;
+  border-color: var(--pw-accent-gold);
+}
+
+.btn-gold:hover {
+  background: var(--pw-accent-gold-hover);
+}
+
+/* Toggle */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  accent-color: var(--pw-accent-gold);
+}
+
+/* Verse container */
+.verse-container {
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.word {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  margin: 0 0.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.word:hover {
+  background: var(--pw-bg-elevated);
+}
+
+.word.selected {
+  background: var(--pw-letter-bg);
+  outline: 1px solid var(--pw-accent-gold);
+}
+
+/* Letter grid */
+.letter-card {
+  background: var(--pw-letter-bg);
+  border: 1px solid var(--pw-letter-border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s;
+}
+
+.letter-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--pw-shadow);
+}
+
+/* Graphical letter highlighting in the passage / interlinear */
+.letter-in-passage {
+  background: var(--pw-accent-gold);
+  color: #0b1118;
+  border-radius: 3px;
+  padding: 1px 3px;
+  margin: 0 1px;
+  transition: all 0.1s ease;
+  cursor: pointer;
+}
+
+.letter-in-passage:hover {
+  box-shadow: 0 0 0 2px rgba(197, 164, 110, 0.4);
 }

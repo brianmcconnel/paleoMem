@@ -1,0 +1,12 @@
+Hebrew text + Strong's should be sourced from Open Scriptures Hebrew Bible (OSHB):
+https://github.com/openscriptures/morphhb
+
+The wlc/ folder contains the XML with <w strong="Hxxxx"> tags.
+
+To process:
+1. Clone or download the morphhb repo.
+2. Parse the XML per book to extract per verse and per word Hebrew + Strong's.
+3. Generate the interlinear words array for the app format.
+
+This script fetches the KJV as open source data.
+For full integration, run a parser for morphhb to generate hebrew-interlinear.json or similar.
