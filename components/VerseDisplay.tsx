@@ -30,59 +30,59 @@ export function VerseDisplay({
 
   if (!verse) {
     return (
-      <div className="card p-6">
-        <div className="uppercase tracking-[3px] text-xs mb-1.5 text-[var(--pw-text-muted)]">
-          King James Version (KJV)
-        </div>
-        <div className="text-[var(--pw-text-muted)] text-lg">
-          No KJV text loaded for{' '}
-          <span className="font-mono text-[var(--pw-accent-gold)]">{selectedRef}</span>.
-        </div>
-        <div className="mt-4 text-xs text-[var(--pw-text-faint)]">
-          This reference is navigable. Detailed data is only available for sampled verses.
+      <div className="card p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="text-[var(--pw-text-muted)] text-sm min-w-0">
+            No text for{' '}
+            <span className="font-mono text-[var(--pw-accent-gold)]">{selectedRef}</span>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] shrink-0">
+            KJV
+          </span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="card p-6">
-      <div className="uppercase tracking-[3px] text-xs mb-1.5 text-[var(--pw-text-muted)]">
-        King James Version (KJV)
-      </div>
+    <div className="card p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="scripture-english text-[1.05rem] leading-snug text-[var(--pw-english)] min-w-0 flex-1">
+          {segments.map((seg, i) => {
+            if (seg.wordId == null) {
+              return <span key={i}>{seg.text}</span>;
+            }
 
-      <div className="scripture-english text-[1.25rem] leading-snug text-[var(--pw-english)]">
-        {segments.map((seg, i) => {
-          if (seg.wordId == null) {
-            return <span key={i}>{seg.text}</span>;
-          }
+            const word = wordById.get(seg.wordId);
+            const isSelected = selectedWordId === seg.wordId;
 
-          const word = wordById.get(seg.wordId);
-          const isSelected = selectedWordId === seg.wordId;
-
-          return (
-            <span
-              key={i}
-              role="button"
-              tabIndex={0}
-              onClick={() => word && onWordSelect?.(word)}
-              onKeyDown={(e) => {
-                if ((e.key === 'Enter' || e.key === ' ') && word) {
-                  e.preventDefault();
-                  onWordSelect?.(word);
+            return (
+              <span
+                key={i}
+                role="button"
+                tabIndex={0}
+                onClick={() => word && onWordSelect?.(word)}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && word) {
+                    e.preventDefault();
+                    onWordSelect?.(word);
+                  }
+                }}
+                className={
+                  isSelected
+                    ? 'kjv-word-selected cursor-pointer'
+                    : 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/15 rounded-sm'
                 }
-              }}
-              className={
-                isSelected
-                  ? 'kjv-word-selected cursor-pointer'
-                  : 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/15 rounded-sm'
-              }
-              title={word ? `Highlight Hebrew: ${word.hebrew}` : undefined}
-            >
-              {seg.text}
-            </span>
-          );
-        })}
+                title={word ? `Highlight Hebrew: ${word.hebrew}` : undefined}
+              >
+                {seg.text}
+              </span>
+            );
+          })}
+        </div>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] shrink-0 pt-0.5">
+          KJV
+        </span>
       </div>
     </div>
   );

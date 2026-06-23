@@ -51,13 +51,13 @@ export default function paleoMemPage() {
         {/* Sticky reader: navigator + KJV + Hebrew always visible while scrolling */}
         <div
           id="reader"
-          className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-4 mb-4 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"
+          className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-3 mb-3 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"
         >
-          <div className="mb-4">
+          <div className="mb-2">
             <VerseNavigator currentRef={currentRef} onSelect={handleRefChange} />
           </div>
 
-          <div className="mb-4 [&_.card]:p-4">
+          <div className="mb-2">
             <VerseDisplay
               verse={hasData ? displayVerse : undefined}
               selectedRef={selectedRef}
@@ -65,38 +65,18 @@ export default function paleoMemPage() {
               onWordSelect={handleSelectWord}
             />
             {!hasData && (
-              <div className="mt-2 text-xs text-[var(--pw-text-faint)]">
+              <div className="mt-1 text-xs text-[var(--pw-text-faint)]">
                 Data for {selectedRef} not available (full OT Hebrew loaded from OSHB open source).
               </div>
             )}
           </div>
 
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-              <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
-                Hebrew Passage — click any letter to select its word (Strong’s) + pictograph
-              </div>
-              <div
-                className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[var(--pw-accent-gold)] px-2 py-0.5 rounded border border-[var(--pw-border)] bg-[var(--pw-bg-panel)]"
-                title="Hebrew is read from right to left"
-              >
-                <span>End</span>
-                <span className="text-[var(--pw-text-faint)]" aria-hidden="true">
-                  &lt;
-                </span>
-                <span className="text-[var(--pw-text-faint)] normal-case tracking-normal">
-                  Read right to left
-                </span>
-                <span className="text-[var(--pw-text-faint)]" aria-hidden="true">
-                  &lt;
-                </span>
-                <span>Start</span>
-              </div>
-            </div>
             {hasData ? (
               <div
-                className="scripture-hebrew text-[var(--pw-hebrew)] bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-xl leading-relaxed select-none"
+                className="scripture-hebrew text-[var(--pw-hebrew)] bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-3 rounded-lg text-xl leading-relaxed select-none"
                 dir="rtl"
+                title="Hebrew — read right to left; click a letter to select its word"
               >
                 {displayVerse.words.map((word, wi) => {
                   const isWordSelected =
