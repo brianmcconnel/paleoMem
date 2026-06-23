@@ -47,6 +47,11 @@ const BOOK_MAP = {
   'Mal': 'Malachi'
 };
 
+/** OSHB/morphhb marks morpheme boundaries with "/" — remove for display */
+function normalizeOshbHebrew(text) {
+  return text.replace(/\//g, '');
+}
+
 function parseVerse(xmlSnippet, bookName) {
   // Extract osisID like "Gen.1.1"
   const osisMatch = xmlSnippet.match(/osisID="([^"]+)"/);
@@ -64,7 +69,7 @@ function parseVerse(xmlSnippet, bookName) {
 
   while ((match = wordRegex.exec(xmlSnippet)) !== null) {
     let strong = match[1] || match[2] || '';
-    let text = match[3].trim();
+    let text = normalizeOshbHebrew(match[3].trim());
 
     // Extract number from lemma like "b/7225" or "1254 a" or "430"
     const numMatch = strong.match(/(\d+)/);

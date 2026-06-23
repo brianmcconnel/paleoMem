@@ -177,6 +177,22 @@ try {
   kjvData = require('./kjv.json');
 } catch (e) { }
 
+/** OSHB/morphhb marks morpheme boundaries with "/" — remove for display */
+export function normalizeOshbHebrew(text: string): string {
+  return text.replace(/\//g, '');
+}
+
+function normalizeHebrewVerse(v: ScriptureVerse): ScriptureVerse {
+  return {
+    ...v,
+    hebrew: normalizeOshbHebrew(v.hebrew),
+    words: v.words.map((w) => ({
+      ...w,
+      hebrew: normalizeOshbHebrew(w.hebrew),
+    })),
+  };
+}
+
 // Load full Hebrew OT + Strong's from open source OSHB/morphhb
 // (run `node scripts/fetch-hebrew-ot.js` )
 let hebrewData: ScriptureVerse[] = [];
@@ -186,7 +202,7 @@ try {
 } catch (e) { }
 
 const hebrewLookup = new Map<string, ScriptureVerse>();
-hebrewData.forEach(v => hebrewLookup.set(v.ref, v));
+hebrewData.forEach((v) => hebrewLookup.set(v.ref, normalizeHebrewVerse(v)));
 
 const chapterVerseMax = new Map<string, number>();
 
