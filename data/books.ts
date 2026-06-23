@@ -1,7 +1,31 @@
+import { getMaxVerse } from './verses';
+
 export interface OtBook {
   name: string;
   chapters: number;
   order: number;
+}
+
+export type ScriptureReference = {
+  book: string;
+  chapter: number;
+  verse: number;
+};
+
+export function buildRef(book: string, chapter: number, verse: number): string {
+  return `${book} ${chapter}:${verse}`;
+}
+
+export function parseRef(ref: string): ScriptureReference {
+  const match = ref.trim().match(/^(.+?)\s+(\d+):(\d+)$/);
+  if (match) {
+    return {
+      book: match[1],
+      chapter: parseInt(match[2], 10),
+      verse: parseInt(match[3], 10),
+    };
+  }
+  return { book: 'Genesis', chapter: 1, verse: 1 };
 }
 
 export const OT_BOOKS: OtBook[] = [
@@ -52,20 +76,22 @@ export function getBook(name: string): OtBook | undefined {
   return OT_BOOKS.find(b => b.name.toLowerCase() === name.toLowerCase());
 }
 
-export function getNextReference(book: string, chapter: number, verse: number): { book: string; chapter: number; verse: number } | null {
+export function getNextReference(
+  book: string,
+  chapter: number,
+  verse: number,
+): ScriptureReference | null {
   const b = getBook(book);
   if (!b) return null;
 
-  // Try next verse
-  if (verse < 200) { // reasonable upper
+  const maxVerse = getMaxVerse(book, chapter);
+  if (verse < maxVerse) {
     return { book, chapter, verse: verse + 1 };
   }
-  // Next chapter
   if (chapter < b.chapters) {
     return { book, chapter: chapter + 1, verse: 1 };
   }
-  // Next book
-  const currentIndex = OT_BOOKS.findIndex(bb => bb.name === book);
+  const currentIndex = OT_BOOKS.findIndex((bb) => bb.name === book);
   if (currentIndex < OT_BOOKS.length - 1) {
     const nextBook = OT_BOOKS[currentIndex + 1];
     return { book: nextBook.name, chapter: 1, verse: 1 };
@@ -73,17 +99,34 @@ export function getNextReference(book: string, chapter: number, verse: number): 
   return null;
 }
 
-export function getPrevReference(book: string, chapter: number, verse: number): { book: string; chapter: number; verse: number } | null {
+export function getPrevReference(
+  book: string,
+  chapter: number,
+  verse: number,
+): ScriptureReference | null {
   if (verse > 1) {
     return { book, chapter, verse: verse - 1 };
   }
   if (chapter > 1) {
-    return { book, chapter: chapter - 1, verse: 50 }; // will be clamped by data lookup
+    const prevChapter = chapter - 1;
+    return { book, chapter: prevChapter, verse: getMaxVerse(book, prevChapter) };
   }
-  const currentIndex = OT_BOOKS.findIndex(bb => bb.name === book);
+  const currentIndex = OT_BOOKS.findIndex((bb) => bb.name === book);
   if (currentIndex > 0) {
     const prevBook = OT_BOOKS[currentIndex - 1];
-    return { book: prevBook.name, chapter: prevBook.chapters, verse: 50 };
+    const prevChapter = prevBook.chapters;
+    return { book: prevBook.name, chapter: prevChapter, verse: getMaxVerse(prevBook.name, prevChapter) };
   }
   return null;
+}
+
+export function normalizeReference(ref: string): string {
+  const parsed = parseRef(ref);
+  const bookInfo = getBook(parsed.book);
+  if (!bookInfo) return ref.trim();
+
+  const chapter = Math.max(1, Math.min(parsed.chapter, bookInfo.chapters));
+  const maxVerse = getMaxVerse(parsed.book, chapter);
+  const verse = Math.max(1, Math.min(parsed.verse, maxVerse));
+  return buildRef(parsed.book, chapter, verse);
 }

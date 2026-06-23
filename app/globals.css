@@ -78,6 +78,14 @@
   --pw-modal: rgba(15, 23, 42, 0.45);
 }
 
+html {
+  scroll-padding-top: 3rem;
+}
+
+#insights {
+  scroll-margin-top: min(55vh, 560px);
+}
+
 :root {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   line-height: 1.6;

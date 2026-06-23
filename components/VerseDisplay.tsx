@@ -35,11 +35,6 @@ export function VerseDisplay({ verse, selectedRef }: VerseDisplayProps) {
       <div className="scripture-english text-[1.25rem] leading-snug text-[var(--pw-english)]">
         {verse.kjv}
       </div>
-
-      <div className="mt-4 flex items-center justify-between text-xs">
-        <div className="text-[var(--pw-text-faint)]">Public domain • {verse.ref}</div>
-        <div className="text-[var(--pw-text-muted)]">KJV first, then Hebrew interlinear</div>
-      </div>
     </div>
   );
 }

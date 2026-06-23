@@ -2,43 +2,73 @@
 
 import React from 'react';
 
+const HEADER_OFFSET = 48; // matches h-12
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  window.dispatchEvent(new CustomEvent('paleomem:collapse-picker'));
+}
+
 export function Header() {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    scrollToSection(id);
+    window.history.replaceState(null, '', `#${id}`);
+  };
+
   return (
-    <header className="border-b border-[var(--pw-border)] bg-[var(--pw-bg-app)]/95 backdrop-blur sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[var(--pw-accent-gold)] flex items-center justify-center text-[#0b1118] font-bold text-xl tracking-[-2px]">
+    <header className="h-12 shrink-0 border-b border-[var(--pw-border)] bg-[var(--pw-bg-app)] sticky top-0 z-50">
+      <div className="h-full max-w-6xl mx-auto px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 rounded bg-[var(--pw-accent-gold)] flex items-center justify-center text-[#0b1118] font-bold text-lg tracking-[-2px] shrink-0">
             א
           </div>
-          <div>
-            <div className="font-semibold text-xl tracking-tight">paleoMem</div>
-            <div className="text-[10px] text-[var(--pw-text-muted)] -mt-1">
-              Paleo-Hebrew Pictographs in Scripture
+          <div className="min-w-0 flex items-baseline gap-2">
+            <div className="font-semibold text-base tracking-tight shrink-0">paleoMem</div>
+            <div className="text-[10px] text-[var(--pw-text-muted)] truncate hidden sm:block">
+              KJV • Hebrew Interlinear • Pictographs
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-sm">
-          <a href="#reader" className="hover:text-[var(--pw-accent-gold)] transition-colors">
+        <nav className="flex items-center gap-3 sm:gap-4 text-sm shrink-0">
+          <a
+            href="#reader"
+            onClick={(e) => handleNavClick(e, 'reader')}
+            className="hover:text-[var(--pw-accent-gold)] transition-colors"
+          >
             Reader
           </a>
-          <a href="#insights" className="hover:text-[var(--pw-accent-gold)] transition-colors">
+          <a
+            href="#insights"
+            onClick={(e) => handleNavClick(e, 'insights')}
+            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
+          >
             Insights
           </a>
-          <a href="#datasources" className="hover:text-[var(--pw-accent-gold)] transition-colors">
+          <a
+            href="#datasources"
+            onClick={(e) => handleNavClick(e, 'datasources')}
+            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
+          >
             Sources
           </a>
           <a
-            href="https://github.com"
+            href="https://github.com/brianmcconnel/paleoMem"
             target="_blank"
-            className="text-[var(--pw-text-muted)] hover:text-[var(--pw-text)]"
+            rel="noopener noreferrer"
+            className="text-[var(--pw-text-muted)] hover:text-[var(--pw-text)] hidden md:inline"
           >
             GitHub
           </a>
-          <div className="text-[var(--pw-text-faint)] text-xs px-2 py-0.5 rounded bg-[var(--pw-bg-surface)] border border-[var(--pw-border)]">
-            WEB + Paleo
+          <div className="text-[var(--pw-text-faint)] text-[10px] px-2 py-0.5 rounded bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] hidden sm:block">
+            OT
           </div>
-        </div>
+        </nav>
       </div>
     </header>
   );

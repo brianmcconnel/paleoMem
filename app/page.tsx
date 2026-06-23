@@ -5,8 +5,6 @@ import { Header } from '../components/Header';
 import { VerseNavigator } from '../components/VerseNavigator';
 import { VerseDisplay } from '../components/VerseDisplay';
 import { Interlinear } from '../components/Interlinear';
-import { PictographBreakdown } from '../components/PictographBreakdown';
-import { AISummary } from '../components/AISummary';
 import { DatasourcesTribute } from '../components/DatasourcesTribute';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
 import { stripPoints } from '../lib/pictograph';
@@ -42,102 +40,96 @@ export default function paleoMemPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 max-w-6xl mx-auto px-6 py-8 w-full">
-        {/* Hero / intro */}
-        <div className="mb-8">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <div className="uppercase tracking-[4px] text-xs text-[var(--pw-accent-gold)] mb-1">
-                ALEPH • BETH • GIMEL
+      <main className="flex-1 max-w-6xl mx-auto px-6 py-4 sm:py-5 w-full">
+        {/* Sticky reader: navigator + KJV + Hebrew always visible while scrolling */}
+        <div
+          id="reader"
+          className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-4 mb-4 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"
+        >
+          <div className="mb-4">
+            <VerseNavigator currentRef={currentRef} onSelect={setCurrentRef} />
+          </div>
+
+          <div className="mb-4 [&_.card]:p-4">
+            <VerseDisplay verse={hasData ? displayVerse : undefined} selectedRef={selectedRef} />
+            {!hasData && (
+              <div className="mt-2 text-xs text-[var(--pw-text-faint)]">
+                Data for {selectedRef} not available (full OT Hebrew loaded from OSHB open source).
               </div>
-              <h1 className="text-4xl font-semibold tracking-tighter">
-                Old Testament.
-                <br />
-                KJV • Hebrew Interlinear • Pictographs.
-              </h1>
-            </div>
-            <div className="text-right text-sm max-w-[280px] text-[var(--pw-text-muted)] hidden md:block">
-              Full Old Testament navigation.
-              <br />
-              Click letters for Strong’s + pictographs.
-            </div>
+            )}
           </div>
-        </div>
 
-        {/* Verse navigation - full Old Testament support */}
-        <div id="reader" className="mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="font-medium text-sm tracking-wider text-[var(--pw-text-muted)]">
-              OLD TESTAMENT NAVIGATOR
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
+                Hebrew Passage — click any letter to select its word (Strong’s) + pictograph
+              </div>
+              <div
+                className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[var(--pw-accent-gold)] px-2 py-0.5 rounded border border-[var(--pw-border)] bg-[var(--pw-bg-panel)]"
+                title="Hebrew is read from right to left"
+              >
+                <span>End</span>
+                <span className="text-[var(--pw-text-faint)]" aria-hidden="true">
+                  &lt;
+                </span>
+                <span className="text-[var(--pw-text-faint)] normal-case tracking-normal">
+                  Read right to left
+                </span>
+                <span className="text-[var(--pw-text-faint)]" aria-hidden="true">
+                  &lt;
+                </span>
+                <span>Start</span>
+              </div>
             </div>
-          </div>
-          <VerseNavigator currentRef={currentRef} onSelect={setCurrentRef} />
-        </div>
-
-        {/* KJV first (primary) */}
-        <div className="mb-6">
-          <VerseDisplay verse={hasData ? displayVerse : undefined} selectedRef={selectedRef} />
-          {!hasData && (
-            <div className="mt-2 text-xs text-[var(--pw-text-faint)]">
-              Data for {selectedRef} not available (full OT Hebrew loaded from OSHB open source).
-            </div>
-          )}
-        </div>
-
-        {/* Full Hebrew passage (RTL) — letters highlight graphically when you click a letter below */}
-        <div className="mb-4">
-          <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)] mb-1.5">
-            Hebrew Passage — click any letter to select its word (Strong’s) + pictograph
-          </div>
-          {hasData ? (
-            <div
-              className="scripture-hebrew text-[var(--pw-hebrew)] bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-5 rounded-xl text-2xl leading-relaxed select-none"
-              dir="rtl"
-            >
-              {displayVerse.words.map((word, wi) => (
-                <React.Fragment key={wi}>
-                  {Array.from(word.hebrew).map((ch, ci) => {
-                    const base = stripPoints(ch);
-                    const isHighlighted = !!selectedLetter && base === selectedLetter;
-                    const isConsonant = !!base && /[א-ת]/.test(base);
-                    return (
-                      <span
-                        key={`${wi}-${ci}`}
-                        className={
-                          isHighlighted
-                            ? 'letter-in-passage'
-                            : isConsonant
-                              ? 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/20 rounded-sm'
-                              : ''
-                        }
-                        title={base ? `Click to select ${word.strongs} • letter ${base}` : ''}
-                        onClick={() => {
-                          if (isConsonant && base) {
-                            setSelectedWordId(word.id);
-                            setSelectedLetter(base);
+            {hasData ? (
+              <div
+                className="scripture-hebrew text-[var(--pw-hebrew)] bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-xl leading-relaxed select-none"
+                dir="rtl"
+              >
+                {displayVerse.words.map((word, wi) => (
+                  <React.Fragment key={wi}>
+                    {Array.from(word.hebrew).map((ch, ci) => {
+                      const base = stripPoints(ch);
+                      const isHighlighted = !!selectedLetter && base === selectedLetter;
+                      const isConsonant = !!base && /[א-ת]/.test(base);
+                      return (
+                        <span
+                          key={`${wi}-${ci}`}
+                          className={
+                            isHighlighted
+                              ? 'letter-in-passage'
+                              : isConsonant
+                                ? 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/20 rounded-sm'
+                                : ''
                           }
-                        }}
-                      >
-                        {ch}
-                      </span>
-                    );
-                  })}
-                  {wi < displayVerse.words.length - 1 && ' '}
-                </React.Fragment>
-              ))}
-              {/* preserve final punctuation if present */}
-              {displayVerse.hebrew.match(/[׃]$/) && '׃'}
-            </div>
-          ) : (
-            <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-5 rounded-xl text-[var(--pw-text-muted)]">
-              Hebrew for {selectedRef} not found in OSHB data.
-            </div>
-          )}
+                          title={base ? `Click to select ${word.strongs} • letter ${base}` : ''}
+                          onClick={() => {
+                            if (isConsonant && base) {
+                              setSelectedWordId(word.id);
+                              setSelectedLetter(base);
+                            }
+                          }}
+                        >
+                          {ch}
+                        </span>
+                      );
+                    })}
+                    {wi < displayVerse.words.length - 1 && ' '}
+                  </React.Fragment>
+                ))}
+                {displayVerse.hebrew.match(/[׃]$/) && '׃'}
+              </div>
+            ) : (
+              <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)]">
+                Hebrew for {selectedRef} not found in OSHB data.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Interlinear Hebrew + Strong's (with graphical selection) */}
+        {/* Interlinear + pictograph letter cards (one row per word) */}
         {hasData && (
-          <div className="mb-8">
+          <div id="insights" className="mb-8">
             <Interlinear
               words={displayVerse.words}
               selectedId={selectedInterlinearWord?.id ?? null}
@@ -147,30 +139,6 @@ export default function paleoMemPage() {
             />
           </div>
         )}
-
-        {/* Pictographic insights with graphical linkages */}
-        {hasData && (
-          <div id="insights" className="mb-8">
-            <div className="flex items-baseline gap-3 mb-4">
-              <h2 className="text-2xl font-semibold tracking-tight">Pictographic Mapping</h2>
-              <div className="text-xs px-2 py-0.5 rounded bg-[var(--pw-bg-panel)] text-[var(--pw-text-muted)] border border-[var(--pw-border)]">
-                {selectedRef} • {selectedInterlinearWord?.strongs}{' '}
-                {selectedLetter && `• Letter: ${selectedLetter}`}
-              </div>
-            </div>
-
-            <PictographBreakdown
-              verse={displayVerse}
-              selectedInterlinearWord={selectedInterlinearWord}
-              selectedLetter={selectedLetter}
-            />
-          </div>
-        )}
-
-        {/* AI Summary area */}
-        <div className="mb-12">
-          <AISummary verse={displayVerse} />
-        </div>
 
         {/* Datasources & Tribute to Chuck Missler */}
         <DatasourcesTribute />

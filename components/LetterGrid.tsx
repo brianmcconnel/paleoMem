@@ -51,10 +51,6 @@ export function LetterGrid({ word, showEmojis, selectedLetter }: LetterGridProps
               );
             })}
           </div>
-
-          <div className="mt-3 text-xs text-[var(--pw-text-muted)]">
-            Pictograph: <span className="text-[var(--pw-text-soft)]">{word.pictograph}</span>
-          </div>
         </div>
       )}
     </div>
