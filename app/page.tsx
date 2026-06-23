@@ -23,13 +23,20 @@ export default function paleoMemPage() {
   // No explicit reset effect to avoid setState-in-effect lint rule.
 
   // Selected word for this verse (falls back gracefully to first word)
-  const selectedInterlinearWord: InterlinearWord | null = hasData
-    ? (displayVerse.words.find(w => w.id === selectedWordId) ?? displayVerse.words[0] ?? null)
-    : null;
+  const selectedInterlinearWord: InterlinearWord | null =
+    hasData && selectedWordId != null
+      ? (displayVerse.words.find((w) => w.id === selectedWordId) ?? null)
+      : null;
+
+  const handleRefChange = (ref: string) => {
+    setCurrentRef(ref);
+    setSelectedWordId(null);
+    setSelectedLetter(null);
+  };
 
   const handleSelectWord = (word: InterlinearWord) => {
-    setSelectedWordId(word.id);
-    setSelectedLetter(null); // clear letter when changing words
+    setSelectedWordId((id) => (id === word.id ? null : word.id));
+    setSelectedLetter(null);
   };
 
   const handleLetterClick = (letter: string) => {
@@ -47,11 +54,16 @@ export default function paleoMemPage() {
           className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-4 mb-4 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"
         >
           <div className="mb-4">
-            <VerseNavigator currentRef={currentRef} onSelect={setCurrentRef} />
+            <VerseNavigator currentRef={currentRef} onSelect={handleRefChange} />
           </div>
 
           <div className="mb-4 [&_.card]:p-4">
-            <VerseDisplay verse={hasData ? displayVerse : undefined} selectedRef={selectedRef} />
+            <VerseDisplay
+              verse={hasData ? displayVerse : undefined}
+              selectedRef={selectedRef}
+              selectedWordId={selectedWordId}
+              onWordSelect={handleSelectWord}
+            />
             {!hasData && (
               <div className="mt-2 text-xs text-[var(--pw-text-faint)]">
                 Data for {selectedRef} not available (full OT Hebrew loaded from OSHB open source).
@@ -86,37 +98,45 @@ export default function paleoMemPage() {
                 className="scripture-hebrew text-[var(--pw-hebrew)] bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-xl leading-relaxed select-none"
                 dir="rtl"
               >
-                {displayVerse.words.map((word, wi) => (
-                  <React.Fragment key={wi}>
-                    {Array.from(word.hebrew).map((ch, ci) => {
-                      const base = stripPoints(ch);
-                      const isHighlighted = !!selectedLetter && base === selectedLetter;
-                      const isConsonant = !!base && /[א-ת]/.test(base);
-                      return (
-                        <span
-                          key={`${wi}-${ci}`}
-                          className={
-                            isHighlighted
-                              ? 'letter-in-passage'
-                              : isConsonant
-                                ? 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/20 rounded-sm'
-                                : ''
-                          }
-                          title={base ? `Click to select ${word.strongs} • letter ${base}` : ''}
-                          onClick={() => {
-                            if (isConsonant && base) {
-                              setSelectedWordId(word.id);
-                              setSelectedLetter(base);
+                {displayVerse.words.map((word, wi) => {
+                  const isWordSelected =
+                    selectedWordId === word.id && selectedLetter == null;
+                  return (
+                    <span
+                      key={wi}
+                      className={isWordSelected ? 'word-in-passage' : undefined}
+                    >
+                      {Array.from(word.hebrew).map((ch, ci) => {
+                        const base = stripPoints(ch);
+                        const isLetterHighlighted =
+                          !!selectedLetter && base === selectedLetter;
+                        const isConsonant = !!base && /[א-ת]/.test(base);
+                        return (
+                          <span
+                            key={`${wi}-${ci}`}
+                            className={
+                              isLetterHighlighted
+                                ? 'letter-in-passage'
+                                : isConsonant
+                                  ? 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/20 rounded-sm'
+                                  : ''
                             }
-                          }}
-                        >
-                          {ch}
-                        </span>
-                      );
-                    })}
-                    {wi < displayVerse.words.length - 1 && ' '}
-                  </React.Fragment>
-                ))}
+                            title={base ? `Click to select ${word.strongs} • letter ${base}` : ''}
+                            onClick={() => {
+                              if (isConsonant && base) {
+                                setSelectedWordId(word.id);
+                                setSelectedLetter(base);
+                              }
+                            }}
+                          >
+                            {ch}
+                          </span>
+                        );
+                      })}
+                      {wi < displayVerse.words.length - 1 && ' '}
+                    </span>
+                  );
+                })}
                 {displayVerse.hebrew.match(/[׃]$/) && '׃'}
               </div>
             ) : (

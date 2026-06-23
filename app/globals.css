@@ -237,6 +237,22 @@ html {
   box-shadow: 0 4px 12px var(--pw-shadow);
 }
 
+/* KJV word linked to Hebrew */
+.kjv-word-selected {
+  background: var(--pw-accent-gold);
+  color: #0b1118;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* Whole Hebrew word highlight (from KJV click) */
+.word-in-passage {
+  text-decoration: underline;
+  text-decoration-color: var(--pw-accent-gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
 /* Graphical letter highlighting in the passage / interlinear */
 .letter-in-passage {
   background: var(--pw-accent-gold);

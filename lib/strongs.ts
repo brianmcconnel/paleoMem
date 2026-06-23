@@ -32,6 +32,29 @@ export function getStrongsDef(code: string | null | undefined): string {
   return entry.strongs_def || entry.kjv_def || '';
 }
 
+/** Primary KJV English rendering(s) for a Strong's entry — first gloss phrase. */
+export function getStrongsKjvGloss(code: string | null | undefined): string {
+  const entry = getStrongs(code);
+  if (!entry?.kjv_def?.trim()) return '';
+
+  const first = entry.kjv_def
+    .split(',')[0]
+    .replace(/\[idiom\]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!first || /^unrepresented in english/i.test(first)) return '';
+  return first;
+}
+
+export function getEnglishTranslation(word: {
+  gloss?: string;
+  strongs: string;
+}): string {
+  if (word.gloss?.trim()) return word.gloss.trim();
+  return getStrongsKjvGloss(word.strongs);
+}
+
 // For display in UI
 export function formatStrongs(entry: StrongsEntry | null): string {
   if (!entry) return '';

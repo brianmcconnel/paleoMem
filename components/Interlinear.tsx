@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { stripPoints, getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
-import { getStrongs, getStrongsDef } from '../lib/strongs';
+import { getStrongs, getStrongsDef, getEnglishTranslation } from '../lib/strongs';
 import { LetterCard } from './LetterCard';
 
 interface InterlinearProps {
@@ -129,6 +129,7 @@ export function Interlinear({
         {parsedWords.map(({ word, parsed }) => {
           const isSelected = selectedId === word.id;
           const strongsDef = getStrongsDef(word.strongs);
+          const englishPhrase = getEnglishTranslation(word);
 
           return (
             <div
@@ -199,9 +200,9 @@ export function Interlinear({
                 </div>
 
                 <div dir="ltr" className="text-left">
-                  {word.gloss && (
-                    <div className="text-sm text-[var(--pw-english)] leading-tight">
-                      {word.gloss}
+                  {englishPhrase && (
+                    <div className="text-sm font-medium text-[var(--pw-english)] leading-tight">
+                      {englishPhrase}
                     </div>
                   )}
 
