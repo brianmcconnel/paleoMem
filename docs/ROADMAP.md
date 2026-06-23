@@ -46,7 +46,7 @@ We iterate quickly — generate components, test with real verses (e.g., Genesis
 
 ## Tech Notes
 
-- Follow flowwatch patterns: strong `lib/` pure functions, small focused components, clear types (zod where helpful), excellent dark UX.
+- Follow clean modular patterns: strong `lib/` pure functions, small focused components, clear types, excellent dark UX.
 - Minus deck.gl of course.
 - RTL for Hebrew, careful with letter order (always show original + left-to-right analysis if needed).
 - Font stack: excellent Hebrew support + elegant English for scripture.

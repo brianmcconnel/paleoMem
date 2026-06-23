@@ -2,13 +2,13 @@
 
 Side-by-side English (WEB) + Hebrew scripture reader with **programmatic Paleo-Hebrew pictographic letter-by-letter translations**, toggleable emojis, and AI-powered insights.
 
-Built following the clean structure and engineering patterns of FlowWatch (Vite/React/TS/lib-first) but as a **Next.js 16** web app (app router, Tailwind, reverent dark theme, Hebrew-first).
+Built with a clean Next.js + TypeScript structure, Tailwind, and a reverent dark theme focused on Hebrew scripture study.
 
 ## Prerequisites
 
 ```bash
-# Activate the shared node env (or use your global node >= 20)
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate flowwatch
+# Activate your development environment (example uses conda)
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate your-env
 npm install
 ```
 
@@ -79,3 +79,5 @@ npm run dev
 ```
 
 Open http://localhost:3000 — start with Genesis 1:1 and toggle the pictographs.
+
+© 2026 Brian McConnel

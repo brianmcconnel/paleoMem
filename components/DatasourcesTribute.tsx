@@ -197,8 +197,8 @@ export function DatasourcesTribute() {
             <div className="mt-4 text-xs">
               <div className="font-medium text-[var(--pw-text)] mb-1">Explore more from Chuck Missler:</div>
               <div>
-                <a href="https://www.khouse.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Koinonia House (KHouse) Website</a> —{' '}
-                <a href="https://www.youtube.com/@khouse" target="_blank" className="text-[var(--pw-link)] hover:underline">YouTube Channel</a>
+                <a href="https://www.khouse.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Koinonia House</a> (khouse.org) —{' '}
+                <a href="https://www.youtube.com/@koinoniahouse" target="_blank" className="text-[var(--pw-link)] hover:underline">YouTube Channel</a>
               </div>
             </div>
 
@@ -211,7 +211,7 @@ export function DatasourcesTribute() {
               <ol className="list-decimal ml-4 space-y-0.5">
                 <li>Proto-Sinaitic script origins: <a href="https://en.wikipedia.org/wiki/Proto-Sinaitic_script" target="_blank" className="text-[var(--pw-link)] hover:underline">Wikipedia / scholarly summaries</a></li>
                 <li>Jeff A. Benner, <em>Ancient Hebrew Language and Alphabet</em>; <a href="https://www.ancient-hebrew.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">ancient-hebrew.org</a></li>
-                <li>Chuck Missler teachings — <a href="https://www.khouse.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Koinonia House (khouse.org)</a> and YouTube</li>
+                <li>Chuck Missler teachings — <a href="https://www.khouse.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Koinonia House</a> (khouse.org) and YouTube</li>
                 <li>2 Timothy 3:16 (KJV)</li>
                 <li>Bible Archaeology resources: <a href="https://www.biblearchaeology.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Associates for Biblical Research</a></li>
               </ol>

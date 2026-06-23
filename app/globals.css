@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* paleoMem — reverent dark theme (flowwatch-inspired CSS vars) */
+/* paleoMem — reverent dark theme (custom CSS vars) */
 :root,
 [data-theme='dark'] {
   /* App surfaces */
