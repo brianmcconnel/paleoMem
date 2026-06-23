@@ -80,4 +80,18 @@ npm run dev
 
 Open http://localhost:3000 — start with Genesis 1:1 and toggle the pictographs.
 
+## Deploy to GitHub Pages
+
+This app is configured for static export (`output: 'export'` in `next.config.ts`) with `basePath: '/paleoMem'`.
+
+1. Push your changes to the `main` branch.
+2. In your GitHub repo, go to **Settings > Pages**.
+3. Under "Build and deployment", set **Source** to **GitHub Actions**.
+4. The included workflow (`.github/workflows/deploy.yml`) will automatically build and deploy on push.
+
+Your site will be live at:  
+**https://brianmcconnel.github.io/paleoMem/**
+
+**Note on bundle size:** The full Hebrew dataset makes the initial JavaScript bundle quite large (~33 MB chunk). First load can be slow. For better performance, data could be split by book and loaded on demand in a future update.
+
 © 2026 Brian McConnel
