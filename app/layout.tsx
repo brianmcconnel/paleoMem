@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
+import { HelpGuide } from '../components/HelpGuide';
 import './globals.css';
 
 const geistSans = Geist({
@@ -42,6 +43,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
         {children}
+        <HelpGuide />
       </body>
     </html>
   );

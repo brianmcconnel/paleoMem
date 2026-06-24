@@ -76,7 +76,7 @@ export function DatasourcesTribute() {
         </div>
 
         {/* In Loving Memory of Chuck Missler */}
-        <div className="panel p-6 border-l-4 border-[var(--pw-accent-gold)]">
+        <div id="dedication" className="panel p-6 border-l-4 border-[var(--pw-accent-gold)] scroll-mt-14">
           <h3 className="text-lg font-semibold mb-2 text-[var(--pw-accent-gold)]">
             In Loving Memory of Chuck Missler
           </h3>

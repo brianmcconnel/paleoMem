@@ -143,13 +143,7 @@ export default function paleoMemPage() {
         {/* Datasources & Tribute to Chuck Missler */}
         <DatasourcesTribute />
 
-        {/* Footer info */}
         <div className="text-xs text-[var(--pw-text-faint)] border-t border-[var(--pw-border)] pt-6 pb-10">
-          Clean lib-first, deterministic core, beautiful reverent UI.
-          <br />
-          Full Old Testament navigation. Hebrew RTL. Strong’s → Blue Letter Bible + pictographs.
-          <span className="ml-2 text-[var(--pw-accent-gold)]">v0.3 — Full OT Navigator</span>
-          <br />
           © 2026 Brian McConnel
         </div>
       </main>
