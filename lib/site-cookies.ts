@@ -1,7 +1,10 @@
 const VISITED_COOKIE = 'paleomem_visited';
 const LAST_VERSE_COOKIE = 'paleomem_last_verse';
 const RTL_HELP_MINIMIZED_COOKIE = 'paleomem_rtl_help_minimized';
+const THEME_COOKIE = 'paleomem_theme';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
+
+export type ThemeMode = 'dark' | 'light';
 
 function cookiePath(): string {
   if (typeof window === 'undefined') return '/';
@@ -49,3 +52,15 @@ export function isRtlHelpMinimized(): boolean {
 export function setRtlHelpMinimized(minimized: boolean): void {
   setCookie(RTL_HELP_MINIMIZED_COOKIE, minimized ? '1' : '0');
 }
+
+/** Color theme preference — defaults to dark when unset. */
+export function getTheme(): ThemeMode {
+  return getCookie(THEME_COOKIE) === 'light' ? 'light' : 'dark';
+}
+
+export function setTheme(theme: ThemeMode): void {
+  setCookie(THEME_COOKIE, theme);
+}
+
+/** Inline script: apply saved theme before first paint (avoids flash). */
+export const THEME_BOOTSTRAP_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)paleomem_theme=([^;]*)/);var t=m?decodeURIComponent(m[1]):'dark';if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();`;

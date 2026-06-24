@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
 import { ReadingHelpProvider } from '../components/ReadingHelpContext';
+import { ThemeProvider } from '../components/ThemeContext';
+import { THEME_BOOTSTRAP_SCRIPT } from '../lib/site-cookies';
 import './globals.css';
 
 const geistSans = Geist({
@@ -41,12 +43,18 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${notoHebrew.variable} h-full antialiased`}
       data-theme="dark"
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
-        <ReadingHelpProvider>
-          {children}
-          <HelpGuide />
-        </ReadingHelpProvider>
+        <ThemeProvider>
+          <ReadingHelpProvider>
+            {children}
+            <HelpGuide />
+          </ReadingHelpProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

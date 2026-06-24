@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ThemeToggle } from './ThemeToggle';
 
 const HEADER_OFFSET = 48; // matches h-12
 
@@ -24,7 +25,7 @@ export function Header() {
     <header className="h-12 shrink-0 border-b border-[var(--pw-border)] bg-[var(--pw-bg-app)] sticky top-0 z-50">
       <div className="h-full max-w-6xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded bg-[var(--pw-accent-gold)] flex items-center justify-center text-[#0b1118] font-bold text-lg shrink-0 scripture-hebrew leading-none">
+          <div className="w-7 h-7 rounded bg-[var(--pw-accent-gold)] flex items-center justify-center text-[var(--pw-on-gold)] font-bold text-lg shrink-0 scripture-hebrew leading-none">
             מ
           </div>
           <div className="min-w-0 flex items-baseline gap-2">
@@ -35,7 +36,8 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex items-center gap-3 sm:gap-4 text-sm shrink-0">
+        <nav className="flex items-center gap-2 sm:gap-3 text-sm shrink-0">
+          <ThemeToggle />
           <a
             href="#reader"
             onClick={(e) => handleNavClick(e, 'reader')}

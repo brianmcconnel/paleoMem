@@ -54,7 +54,7 @@ export function Interlinear({
               key={idx}
               className={
                 isMatch
-                  ? 'letter-in-passage bg-[var(--pw-accent-gold)] text-[#0b1118] px-0.5 rounded-sm'
+                  ? 'letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm'
                   : 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/30 rounded-sm'
               }
               title={base ? `Select letter ${base}` : ''}
@@ -205,7 +205,7 @@ export function Interlinear({
                       strongsLinkable ? 'cursor-pointer hover:underline' : 'cursor-default'
                     } ${
                       isSelected && selectedLetter
-                        ? 'bg-[var(--pw-accent-gold)] text-[#0b1118] border-[var(--pw-accent-gold)] font-semibold'
+                        ? 'bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] border-[var(--pw-accent-gold)] font-semibold'
                         : 'bg-[var(--pw-bg-elevated)] text-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)]/50 hover:bg-[var(--pw-accent-gold)]/10'
                     }`}
                     title={

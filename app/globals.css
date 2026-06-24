@@ -24,6 +24,7 @@
   --pw-accent-hover: #60a5fa;
   --pw-accent-gold: #c5a46e;
   --pw-accent-gold-hover: #d8b97f;
+  --pw-on-gold: #0b1118;
   --pw-link: #8ab4ff;
 
   /* Scripture specific */
@@ -62,6 +63,7 @@
   --pw-accent-hover: #3b82f6;
   --pw-accent-gold: #a37d44;
   --pw-accent-gold-hover: #b38d54;
+  --pw-on-gold: #1a2533;
   --pw-link: #2563eb;
 
   --pw-hebrew: #1f2937;
@@ -175,7 +177,7 @@ html {
 
 .btn-gold {
   background: var(--pw-accent-gold);
-  color: #1a2533;
+  color: var(--pw-on-gold);
   border-color: var(--pw-accent-gold);
 }
 
@@ -240,7 +242,7 @@ html {
 /* KJV word linked to Hebrew */
 .kjv-word-selected {
   background: var(--pw-accent-gold);
-  color: #0b1118;
+  color: var(--pw-on-gold);
   border-radius: 2px;
   padding: 0 1px;
 }
@@ -256,7 +258,7 @@ html {
 /* Graphical letter highlighting in the passage / interlinear */
 .letter-in-passage {
   background: var(--pw-accent-gold);
-  color: #0b1118;
+  color: var(--pw-on-gold);
   border-radius: 3px;
   padding: 1px 3px;
   margin: 0 1px;

@@ -208,7 +208,7 @@ export function HelpGuide() {
         className={`pointer-events-auto relative z-20 flex items-center justify-center w-11 h-11 rounded-full border shadow-lg transition-all ${
           isOpen
             ? 'bg-[var(--pw-bg-panel)] border-[var(--pw-accent-gold)] text-[var(--pw-accent-gold)]'
-            : 'bg-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)] text-[#0b1118] hover:bg-[var(--pw-accent-gold-hover)]'
+            : 'bg-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] hover:bg-[var(--pw-accent-gold-hover)]'
         }`}
         aria-label={isOpen ? 'Close help guide' : 'Open help guide'}
         aria-expanded={isOpen}

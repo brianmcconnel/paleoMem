@@ -93,7 +93,7 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
 
   const pickerItemClass = (selected: boolean) =>
     selected
-      ? 'bg-[var(--pw-accent-gold)] text-[#0b1118] font-medium'
+      ? 'bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] font-medium'
       : 'text-[var(--pw-text-soft)] hover:bg-[var(--pw-bg-elevated)]';
 
   return (
