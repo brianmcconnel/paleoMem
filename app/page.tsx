@@ -1,20 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from '../components/Header';
 import { VerseNavigator } from '../components/VerseNavigator';
 import { VerseDisplay } from '../components/VerseDisplay';
 import { Interlinear } from '../components/Interlinear';
 import { VerseMeanings } from '../components/VerseMeanings';
 import { DatasourcesTribute } from '../components/DatasourcesTribute';
+import { HebrewReaderPanel } from '../components/HebrewReaderPanel';
+import { normalizeReference } from '../data/books';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
-import { HebrewRtlBadge, HebrewRtlNote } from '../components/HebrewRtlHint';
+import { getLastVerse, setLastVerse } from '../lib/site-cookies';
 import { stripPoints } from '../lib/pictograph';
 
 export default function paleoMemPage() {
   const [currentRef, setCurrentRef] = useState<string>(DEFAULT_VERSE.ref);
+  const [verseReady, setVerseReady] = useState(false);
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = getLastVerse();
+    if (saved) {
+      const normalized = normalizeReference(saved);
+      if (getVerse(normalized)) {
+        setCurrentRef(normalized);
+      }
+    }
+    setVerseReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!verseReady) return;
+    setLastVerse(currentRef);
+  }, [currentRef, verseReady]);
 
   const selectedRef = currentRef;
   const verseData = getVerse(selectedRef);
@@ -69,13 +88,7 @@ export default function paleoMemPage() {
 
           <div>
             {hasData ? (
-              <div className="relative bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] rounded-lg">
-                <HebrewRtlBadge className="absolute top-2 right-2 z-10" />
-                <div
-                  className="scripture-hebrew text-[var(--pw-hebrew)] px-3 pt-9 pb-2 text-xl leading-relaxed select-none"
-                  dir="rtl"
-                  title="Hebrew — read right to left; click a letter to select its word"
-                >
+              <HebrewReaderPanel>
                 {displayVerse.words.map((word, wi) => {
                   const isWordSelected = selectedWordId === word.id;
                   return (
@@ -115,9 +128,7 @@ export default function paleoMemPage() {
                   );
                 })}
                 {displayVerse.hebrew.match(/[׃]$/) && '׃'}
-                </div>
-                <HebrewRtlNote className="px-3 pb-3 border-t border-[var(--pw-border)]/60 pt-2" />
-              </div>
+              </HebrewReaderPanel>
             ) : (
               <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)]">
                 Hebrew for {selectedRef} not found in OSHB data.

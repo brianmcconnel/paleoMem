@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
+import { ReadingHelpProvider } from '../components/ReadingHelpContext';
 import './globals.css';
 
 const geistSans = Geist({
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   description:
     'Side-by-side Hebrew + English scripture with Paleo-Hebrew pictographic letter analysis',
   icons: {
-    icon: '/favicon.ico',
+    icon: [{ url: '/paleoMem/icon.svg', type: 'image/svg+xml' }],
   },
 };
 
@@ -42,8 +43,10 @@ export default function RootLayout({
       data-theme="dark"
     >
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
-        {children}
-        <HelpGuide />
+        <ReadingHelpProvider>
+          {children}
+          <HelpGuide />
+        </ReadingHelpProvider>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { HebrewRtlNote, HEBREW_RTL_LABEL } from './HebrewRtlHint';
-import { hasVisitedBefore, markVisited } from '../lib/visitor-cookie';
+import { hasVisitedBefore, markVisited } from '../lib/site-cookies';
 
 function InfoIcon() {
   return (
@@ -62,7 +62,7 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
       </p>
 
       <div className="rounded-lg border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/50 px-3 py-2.5">
-        <HebrewRtlNote />
+        <HebrewRtlNote alwaysShow />
       </div>
 
       <div>
