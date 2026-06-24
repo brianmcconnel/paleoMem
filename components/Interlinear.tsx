@@ -3,7 +3,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { stripPoints, getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
-import { getStrongs, getStrongsDef } from '../lib/strongs';
+import {
+  getStrongs,
+  getStrongsDisplay,
+  isMorphologicalStrongsCode,
+} from '../lib/strongs';
 import { HebrewRtlNote } from './HebrewRtlHint';
 import { LetterCard } from './LetterCard';
 
@@ -135,9 +139,11 @@ export function Interlinear({
       <div className="space-y-4">
         {parsedWords.map(({ word, parsed }) => {
           const isSelected = selectedId === word.id;
-          const strongsEntry = getStrongs(word.strongs);
-          const strongsDef = getStrongsDef(word.strongs);
-          const pronunciation = strongsEntry?.pron || word.transliteration || '';
+          const strongsDisplay = getStrongsDisplay(word.strongs, word.hebrew);
+          const pronunciation =
+            strongsDisplay.pronunciation || word.transliteration || '';
+          const strongsDef = strongsDisplay.definition;
+          const strongsLinkable = !isMorphologicalStrongsCode(word.strongs);
 
           return (
             <div
@@ -166,37 +172,51 @@ export function Interlinear({
                     {renderHebrewWithHighlight(word, word.hebrew, isSelected)}
                   </div>
                   <span
-                    role="link"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(
-                        getBlueLetterBibleUrl(word.strongs),
-                        '_blank',
-                        'noopener,noreferrer',
-                      );
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        window.open(
-                          getBlueLetterBibleUrl(word.strongs),
-                          '_blank',
-                          'noopener,noreferrer',
-                        );
-                      }
-                    }}
-                    className={`font-mono text-xs px-1.5 py-px rounded border transition-all cursor-pointer hover:underline shrink-0 ${
+                    role={strongsLinkable ? 'link' : undefined}
+                    tabIndex={strongsLinkable ? 0 : undefined}
+                    onClick={
+                      strongsLinkable
+                        ? (e) => {
+                            e.stopPropagation();
+                            window.open(
+                              getBlueLetterBibleUrl(word.strongs),
+                              '_blank',
+                              'noopener,noreferrer',
+                            );
+                          }
+                        : undefined
+                    }
+                    onKeyDown={
+                      strongsLinkable
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              window.open(
+                                getBlueLetterBibleUrl(word.strongs),
+                                '_blank',
+                                'noopener,noreferrer',
+                              );
+                            }
+                          }
+                        : undefined
+                    }
+                    className={`font-mono text-xs px-1.5 py-px rounded border transition-all shrink-0 ${
+                      strongsLinkable ? 'cursor-pointer hover:underline' : 'cursor-default'
+                    } ${
                       isSelected && selectedLetter
                         ? 'bg-[var(--pw-accent-gold)] text-[#0b1118] border-[var(--pw-accent-gold)] font-semibold'
                         : 'bg-[var(--pw-bg-elevated)] text-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)]/50 hover:bg-[var(--pw-accent-gold)]/10'
                     }`}
-                    title={(() => {
-                      const def = getStrongs(word.strongs);
-                      const desc = def?.strongs_def || def?.kjv_def || '';
-                      return `View ${word.strongs} on Blue Letter Bible${desc ? ' — ' + desc : ''}`;
-                    })()}
+                    title={
+                      strongsLinkable
+                        ? (() => {
+                            const def = getStrongs(word.strongs);
+                            const desc = def?.strongs_def || def?.kjv_def || '';
+                            return `View ${word.strongs} on Blue Letter Bible${desc ? ' — ' + desc : ''}`;
+                          })()
+                        : 'OSHB morpheme tag — not a numbered Strong\'s entry'
+                    }
                   >
                     {word.strongs}
                   </span>
@@ -211,9 +231,11 @@ export function Interlinear({
 
                   {strongsDef && (
                     <div
-                      className={`text-xs text-[var(--pw-text-muted)] leading-snug ${
-                        pronunciation ? 'mt-2 border-t border-[var(--pw-border)] pt-2' : ''
-                      }`}
+                      className={`text-xs leading-snug ${
+                        strongsDisplay.isFallback
+                          ? 'text-[var(--pw-text-faint)] italic'
+                          : 'text-[var(--pw-text-muted)]'
+                      } ${pronunciation ? 'mt-2 border-t border-[var(--pw-border)] pt-2' : ''}`}
                     >
                       {strongsDef}
                     </div>

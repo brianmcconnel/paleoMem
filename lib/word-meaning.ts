@@ -1,6 +1,6 @@
 import { InterlinearWord } from '../data/verses';
 import { parseWord, ParsedWord } from './pictograph';
-import { getStrongsDef } from './strongs';
+import { getStrongsDisplay } from './strongs';
 
 export type VerseWordSegment = {
   wordId: number;
@@ -40,7 +40,7 @@ function wordEmojiPart(parsed: ParsedWord): string {
 export function synthesizeVerseMeaning(words: InterlinearWord[]): VerseMeaningSynthesis {
   const segments: VerseWordSegment[] = words.map((word) => {
     const parsed = parseWord(word.hebrew);
-    const strongsDef = getStrongsDef(word.strongs);
+    const strongsDef = getStrongsDisplay(word.strongs, word.hebrew).definition;
 
     return {
       wordId: word.id,
