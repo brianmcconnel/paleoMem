@@ -43,7 +43,7 @@ export default function paleoMemPage() {
       <Header />
 
       <main className="flex-1 max-w-6xl mx-auto px-6 py-4 sm:py-5 w-full">
-        {/* Sticky reader: navigator + KJV + Hebrew always visible while scrolling */}
+        {/* Reader: navigator + KJV + Hebrew always visible while scrolling */}
         <div
           id="reader"
           className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-3 mb-3 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"
@@ -68,11 +68,18 @@ export default function paleoMemPage() {
 
           <div>
             {hasData ? (
-              <div
-                className="scripture-hebrew text-[var(--pw-hebrew)] bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-3 rounded-lg text-xl leading-relaxed select-none"
-                dir="rtl"
-                title="Hebrew — read right to left; click a letter to select its word"
-              >
+              <div className="relative bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] rounded-lg">
+                <span
+                  className="absolute top-2 right-2 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] font-mono bg-[var(--pw-bg-elevated)] border border-[var(--pw-border)] px-2 py-0.5 rounded"
+                  title="Hebrew reads right to left — begin at start (right), read toward end (left)"
+                >
+                  end &lt; text &lt; start
+                </span>
+                <div
+                  className="scripture-hebrew text-[var(--pw-hebrew)] p-3 pt-9 text-xl leading-relaxed select-none"
+                  dir="rtl"
+                  title="Hebrew — read right to left; click a letter to select its word"
+                >
                 {displayVerse.words.map((word, wi) => {
                   const isWordSelected = selectedWordId === word.id;
                   return (
@@ -112,6 +119,7 @@ export default function paleoMemPage() {
                   );
                 })}
                 {displayVerse.hebrew.match(/[׃]$/) && '׃'}
+                </div>
               </div>
             ) : (
               <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)]">

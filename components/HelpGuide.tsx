@@ -72,9 +72,11 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
           </li>
           <li>
             <span className="text-[var(--pw-text-soft)]">
-              Read KJV and Hebrew together in the sticky reader. Click a{' '}
-              <span className="text-[var(--pw-accent-gold)]">KJV</span> word or Hebrew letter to
-              highlight the matching word.
+              Read KJV and Hebrew together in the reader. Hebrew runs right to left — follow the{' '}
+              <span className="font-mono text-[var(--pw-text-muted)]">end &lt; text &lt; start</span>{' '}
+              badge (begin at <em>start</em> on the right, read toward <em>end</em> on the left).
+              Click a <span className="text-[var(--pw-accent-gold)]">KJV</span> word or Hebrew
+              letter to highlight the matching word.
             </span>
           </li>
           <li>
