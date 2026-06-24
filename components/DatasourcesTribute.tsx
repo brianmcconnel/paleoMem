@@ -196,9 +196,17 @@ export function DatasourcesTribute() {
 
             <div className="mt-4 text-xs">
               <div className="font-medium text-[var(--pw-text)] mb-1">Explore more from Chuck Missler:</div>
-              <div>
-                <a href="https://www.khouse.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Koinonia House</a> (khouse.org) —{' '}
-                <a href="https://www.youtube.com/@koinoniahouse" target="_blank" className="text-[var(--pw-link)] hover:underline">YouTube Channel</a>
+              <div className="space-y-1 text-[var(--pw-text-muted)]">
+                <div>
+                  <a href="https://www.khouse.org/" target="_blank" rel="noopener noreferrer" className="text-[var(--pw-link)] hover:underline">Koinonia House</a> (khouse.org) —{' '}
+                  <a href="https://www.youtube.com/@koinoniahouse" target="_blank" rel="noopener noreferrer" className="text-[var(--pw-link)] hover:underline">YouTube Channel</a>
+                </div>
+                <div>
+                  <a href="https://www.youtube.com/watch?v=HtRdQeGm_7Q" target="_blank" rel="noopener noreferrer" className="text-[var(--pw-link)] hover:underline">The Hebrew Language and Bible Codes</a> (YouTube)
+                </div>
+                <div>
+                  <a href="https://chuckmissler.com/" target="_blank" rel="noopener noreferrer" className="text-[var(--pw-link)] hover:underline">chuckmissler.com</a> — official archive
+                </div>
               </div>
             </div>
 
@@ -207,13 +215,202 @@ export function DatasourcesTribute() {
             </p>
 
             <div className="mt-4 pt-2 border-t border-[var(--pw-border)] text-[10px] text-[var(--pw-text-faint)]">
-              <div className="font-medium mb-1 text-[var(--pw-text)]">References</div>
-              <ol className="list-decimal ml-4 space-y-0.5">
-                <li>Proto-Sinaitic script origins: <a href="https://en.wikipedia.org/wiki/Proto-Sinaitic_script" target="_blank" className="text-[var(--pw-link)] hover:underline">Wikipedia / scholarly summaries</a></li>
-                <li>Jeff A. Benner, <em>Ancient Hebrew Language and Alphabet</em>; <a href="https://www.ancient-hebrew.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">ancient-hebrew.org</a></li>
-                <li>Chuck Missler teachings — <a href="https://www.khouse.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Koinonia House</a> (khouse.org) and YouTube</li>
-                <li>2 Timothy 3:16 (KJV)</li>
-                <li>Bible Archaeology resources: <a href="https://www.biblearchaeology.org/" target="_blank" className="text-[var(--pw-link)] hover:underline">Associates for Biblical Research</a></li>
+              <div className="font-medium mb-2 text-[var(--pw-text)]">References</div>
+              <ol className="list-decimal ml-4 space-y-3">
+                <li>
+                  <span className="text-[var(--pw-text-soft)]">
+                    Proto-Sinaitic script origins and archaeological evidence — Serabit el-Khadim
+                    inscriptions (Sinai), with related finds at Wadi el-Hol.
+                  </span>
+                  <ul className="list-disc ml-4 mt-1 space-y-0.5">
+                    <li>
+                      Wikipedia overview with scholarly references:{' '}
+                      <a
+                        href="https://en.wikipedia.org/wiki/Proto-Sinaitic_script"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        Proto-Sinaitic script
+                      </a>
+                    </li>
+                    <li>
+                      Recent archaeological updates and translation work:{' '}
+                      <a
+                        href="https://www.patternsofevidence.com/2025/06/13/proto-sinaitic-inscriptions-at-the-sinai-mines/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        Patterns of Evidence — Proto-Sinaitic Inscriptions at the Sinai Mines
+                      </a>
+                    </li>
+                    <li>
+                      Douglas Petrovich&apos;s research on early alphabetic inscriptions and possible
+                      Hebrew identification (featured in Patterns of Evidence films{' '}
+                      <a
+                        href="https://store.patternsofevidence.com/collections/movies"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        <em>The Moses Controversy</em>
+                      </a>{' '}
+                      and{' '}
+                      <a
+                        href="https://www.patternsofevidence.com/mtsinai/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        <em>Journey to Mount Sinai</em>
+                      </a>
+                      ).
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <span className="text-[var(--pw-text-soft)]">
+                    Jeff A. Benner, <em>The Ancient Hebrew Language and Alphabet</em> and{' '}
+                    <a
+                      href="https://www.ancient-hebrew.org/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--pw-link)] hover:underline"
+                    >
+                      ancient-hebrew.org
+                    </a>
+                    . Benner maps the original pictographs to concrete meanings and frequently shows
+                    alignment with Hebrew word roots.
+                  </span>
+                  <ul className="list-disc ml-4 mt-1 space-y-0.5">
+                    <li>
+                      Start here:{' '}
+                      <a
+                        href="https://www.ancient-hebrew.org/ancient-alphabet/ancient-pictographic-alphabet.htm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        Learn the Ancient Pictographic Hebrew Script
+                      </a>
+                    </li>
+                    <li>
+                      Detailed visual chart:{' '}
+                      <a
+                        href="https://www.ancient-hebrew.org/alphabet/hebrew-alphabet-chart.htm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        Hebrew Alphabet Chart: Evolution from Pictograph to Greek
+                      </a>
+                    </li>
+                    <li>
+                      Main site &amp; additional letter studies:{' '}
+                      <a
+                        href="https://www.ancient-hebrew.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        ancient-hebrew.org
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <span className="text-[var(--pw-text-soft)]">
+                    Chuck Missler teachings via Koinonia House. His emphasis on the multi-layered
+                    nature of Scripture (plain, symbolic, numeric, typological) and the significance
+                    of every letter and structure provides the inspirational framework for paleoMem.
+                  </span>
+                  <ul className="list-disc ml-4 mt-1 space-y-0.5">
+                    <li>
+                      Main site:{' '}
+                      <a
+                        href="https://www.khouse.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        khouse.org
+                      </a>
+                    </li>
+                    <li>
+                      Specific teaching on the Hebrew language and layered meaning:{' '}
+                      <a
+                        href="https://www.youtube.com/watch?v=HtRdQeGm_7Q"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        The Hebrew Language and Bible Codes
+                      </a>{' '}
+                      (YouTube)
+                    </li>
+                    <li>
+                      Chuck Missler official archive:{' '}
+                      <a
+                        href="https://chuckmissler.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        chuckmissler.com
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <a
+                    href="https://www.biblegateway.com/passage/?search=2+Timothy+3%3A16&version=KJV"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--pw-link)] hover:underline"
+                  >
+                    2 Timothy 3:16 (KJV)
+                  </a>
+                </li>
+                <li>
+                  <span className="text-[var(--pw-text-soft)]">
+                    Archaeological evidence for the development of the early Hebrew alphabet and
+                    the transition from pictographic to more abstract forms.
+                  </span>
+                  <ul className="list-disc ml-4 mt-1 space-y-0.5">
+                    <li>
+                      Core archaeological context:{' '}
+                      <a
+                        href="https://en.wikipedia.org/wiki/Proto-Sinaitic_script"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        Proto-Sinaitic script — Wikipedia
+                      </a>{' '}
+                      (with references to Serabit el-Khadim and Wadi el-Hol inscriptions)
+                    </li>
+                    <li>
+                      Douglas Petrovich&apos;s work on the world&apos;s oldest alphabet and early Hebrew
+                      inscriptions (see also Patterns of Evidence discussions linked in #1)
+                    </li>
+                    <li>
+                      Accessible introduction to the pictographic origins: Jeff A. Benner&apos;s
+                      resources above (especially the chart in #2)
+                    </li>
+                    <li>
+                      Bible archaeology &amp; scholarly perspectives on pictographic interpretation:{' '}
+                      <a
+                        href="https://www.biblearchaeology.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--pw-link)] hover:underline"
+                      >
+                        Associates for Biblical Research
+                      </a>
+                    </li>
+                  </ul>
+                </li>
               </ol>
             </div>
           </div>

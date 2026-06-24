@@ -47,7 +47,16 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
 
       <p className="text-xs text-[var(--pw-text-faint)] border-l-2 border-[var(--pw-accent-gold)] pl-3 leading-relaxed">
         Inspired by Chuck Missler&apos;s enthusiastic, letter-by-letter study of the Bible — that
-        every letter is God-breathed.{' '}
+        every letter is God-breathed. We especially recommend watching his explanation:{' '}
+        <a
+          href="https://www.youtube.com/watch?v=HtRdQeGm_7Q"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[var(--pw-link)] hover:underline font-medium"
+        >
+          The Hebrew Language and Bible Codes
+        </a>{' '}
+        (YouTube).{' '}
         <a
           href="#dedication"
           onClick={(e) => {
