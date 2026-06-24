@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { HebrewRtlNote, HEBREW_RTL_LABEL } from './HebrewRtlHint';
 import { hasVisitedBefore, markVisited } from '../lib/visitor-cookie';
 
 function InfoIcon() {
@@ -60,6 +61,10 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
         .
       </p>
 
+      <div className="rounded-lg border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/50 px-3 py-2.5">
+        <HebrewRtlNote />
+      </div>
+
       <div>
         <div className="text-xs font-semibold uppercase tracking-widest text-[var(--pw-accent-gold)] mb-2">
           How to use
@@ -73,8 +78,8 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
           <li>
             <span className="text-[var(--pw-text-soft)]">
               Read KJV and Hebrew together in the reader. Hebrew runs right to left — follow the{' '}
-              <span className="font-mono text-[var(--pw-text-muted)]">end &lt; text &lt; start</span>{' '}
-              badge (begin at <em>start</em> on the right, read toward <em>end</em> on the left).
+              <span className="font-mono text-[var(--pw-text-muted)]">{HEBREW_RTL_LABEL}</span>{' '}
+              badge (begin at <em>Start</em> on the right, read toward <em>Finish</em> on the left).
               Click a <span className="text-[var(--pw-accent-gold)]">KJV</span> word or Hebrew
               letter to highlight the matching word.
             </span>

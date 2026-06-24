@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { InterlinearWord } from '../data/verses';
+import { HebrewRtlNote } from './HebrewRtlHint';
 import { synthesizeVerseMeaning } from '../lib/word-meaning';
 
 interface VerseMeaningsProps {
@@ -73,8 +74,9 @@ export function VerseMeanings({ words, selectedWordId, onSelect }: VerseMeanings
         <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
           Pictographic Verse Meaning
         </div>
-        <div className="text-[10px] text-[var(--pw-text-faint)]">
-          Whole-verse synthesis — symbolic, practical, and emoji strings in Hebrew reading order
+        <HebrewRtlNote />
+        <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
+          Whole-verse synthesis — symbolic, practical, and emoji strings follow Hebrew word order.
         </div>
       </div>
 

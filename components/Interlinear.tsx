@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { stripPoints, getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
 import { getStrongs, getStrongsDef } from '../lib/strongs';
+import { HebrewRtlNote } from './HebrewRtlHint';
 import { LetterCard } from './LetterCard';
 
 interface InterlinearProps {
@@ -116,8 +117,9 @@ export function Interlinear({
           <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
             Interlinear Hebrew + Strong’s + Pictographs
           </div>
-          <div className="text-[10px] text-[var(--pw-text-faint)]">
-            Each row: Strong’s card first, then letter pictographs — left to right in reading order
+          <HebrewRtlNote />
+          <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
+            Each row: Strong’s card first, then letter pictographs for that word.
           </div>
         </div>
         <label className="toggle text-sm shrink-0">
@@ -242,8 +244,8 @@ export function Interlinear({
       </div>
 
       <div className="text-[10px] text-[var(--pw-text-faint)]">
-        Words are ordered top to bottom in Hebrew reading order. Each row scrolls horizontally if
-        needed. Click a Strong’s number to open it on Blue Letter Bible.
+        Words follow Hebrew verse order (right to left). Each row scrolls horizontally if needed.
+        Click a Strong’s number to open it on Blue Letter Bible.
       </div>
     </div>
   );

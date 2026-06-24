@@ -8,6 +8,7 @@ import { Interlinear } from '../components/Interlinear';
 import { VerseMeanings } from '../components/VerseMeanings';
 import { DatasourcesTribute } from '../components/DatasourcesTribute';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
+import { HebrewRtlBadge, HebrewRtlNote } from '../components/HebrewRtlHint';
 import { stripPoints } from '../lib/pictograph';
 
 export default function paleoMemPage() {
@@ -69,14 +70,9 @@ export default function paleoMemPage() {
           <div>
             {hasData ? (
               <div className="relative bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] rounded-lg">
-                <span
-                  className="absolute top-2 right-2 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] font-mono bg-[var(--pw-bg-elevated)] border border-[var(--pw-border)] px-2 py-0.5 rounded"
-                  title="Hebrew reads right to left — begin at start (right), read toward end (left)"
-                >
-                  end &lt; text &lt; start
-                </span>
+                <HebrewRtlBadge className="absolute top-2 right-2 z-10" />
                 <div
-                  className="scripture-hebrew text-[var(--pw-hebrew)] p-3 pt-9 text-xl leading-relaxed select-none"
+                  className="scripture-hebrew text-[var(--pw-hebrew)] px-3 pt-9 pb-2 text-xl leading-relaxed select-none"
                   dir="rtl"
                   title="Hebrew — read right to left; click a letter to select its word"
                 >
@@ -120,6 +116,7 @@ export default function paleoMemPage() {
                 })}
                 {displayVerse.hebrew.match(/[׃]$/) && '׃'}
                 </div>
+                <HebrewRtlNote className="px-3 pb-3 border-t border-[var(--pw-border)]/60 pt-2" />
               </div>
             ) : (
               <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)]">
