@@ -2,7 +2,9 @@
 
 import React, { useMemo } from 'react';
 import { ScriptureVerse, InterlinearWord } from '../data/verses';
+import { getBlueLetterBibleVerseUrl } from '../lib/blueletterbible';
 import { alignKjvToHebrewWords } from '../lib/kjv-align';
+import { parseRef } from '../data/books';
 
 interface VerseDisplayProps {
   verse?: ScriptureVerse;
@@ -28,6 +30,17 @@ export function VerseDisplay({
     return map;
   }, [verse]);
 
+  const blbVerseUrl = useMemo(() => {
+    if (verse) {
+      return getBlueLetterBibleVerseUrl(verse.book, verse.chapter, verse.verse);
+    }
+    if (selectedRef) {
+      const { book, chapter, verse: v } = parseRef(selectedRef);
+      return getBlueLetterBibleVerseUrl(book, chapter, v);
+    }
+    return null;
+  }, [verse, selectedRef]);
+
   if (!verse) {
     return (
       <div className="card p-3">
@@ -36,9 +49,21 @@ export function VerseDisplay({
             No text for{' '}
             <span className="font-mono text-[var(--pw-accent-gold)]">{selectedRef}</span>
           </div>
-          <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] shrink-0">
-            KJV
-          </span>
+          {blbVerseUrl ? (
+            <a
+              href={blbVerseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] uppercase tracking-widest text-[var(--pw-accent-gold)] hover:underline shrink-0"
+              title="View this verse on Blue Letter Bible"
+            >
+              KJV
+            </a>
+          ) : (
+            <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] shrink-0">
+              KJV
+            </span>
+          )}
         </div>
       </div>
     );
@@ -80,9 +105,21 @@ export function VerseDisplay({
             );
           })}
         </div>
-        <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] shrink-0 pt-0.5">
-          KJV
-        </span>
+        {blbVerseUrl ? (
+          <a
+            href={blbVerseUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] uppercase tracking-widest text-[var(--pw-accent-gold)] hover:underline shrink-0 pt-0.5"
+            title="View this verse on Blue Letter Bible"
+          >
+            KJV
+          </a>
+        ) : (
+          <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] shrink-0 pt-0.5">
+            KJV
+          </span>
+        )}
       </div>
     </div>
   );

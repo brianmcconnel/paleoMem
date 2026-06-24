@@ -5,6 +5,7 @@ import { Header } from '../components/Header';
 import { VerseNavigator } from '../components/VerseNavigator';
 import { VerseDisplay } from '../components/VerseDisplay';
 import { Interlinear } from '../components/Interlinear';
+import { VerseMeanings } from '../components/VerseMeanings';
 import { DatasourcesTribute } from '../components/DatasourcesTribute';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
 import { stripPoints } from '../lib/pictograph';
@@ -22,12 +23,6 @@ export default function paleoMemPage() {
   // Note: selection state is derived from currentRef + displayVerse in computations below.
   // No explicit reset effect to avoid setState-in-effect lint rule.
 
-  // Selected word for this verse (falls back gracefully to first word)
-  const selectedInterlinearWord: InterlinearWord | null =
-    hasData && selectedWordId != null
-      ? (displayVerse.words.find((w) => w.id === selectedWordId) ?? null)
-      : null;
-
   const handleRefChange = (ref: string) => {
     setCurrentRef(ref);
     setSelectedWordId(null);
@@ -35,7 +30,7 @@ export default function paleoMemPage() {
   };
 
   const handleSelectWord = (word: InterlinearWord) => {
-    setSelectedWordId((id) => (id === word.id ? null : word.id));
+    setSelectedWordId(word.id);
     setSelectedLetter(null);
   };
 
@@ -79,8 +74,7 @@ export default function paleoMemPage() {
                 title="Hebrew — read right to left; click a letter to select its word"
               >
                 {displayVerse.words.map((word, wi) => {
-                  const isWordSelected =
-                    selectedWordId === word.id && selectedLetter == null;
+                  const isWordSelected = selectedWordId === word.id;
                   return (
                     <span
                       key={wi}
@@ -129,13 +123,19 @@ export default function paleoMemPage() {
 
         {/* Interlinear + pictograph letter cards (one row per word) */}
         {hasData && (
-          <div id="insights" className="mb-8">
+          <div id="insights" className="mb-8 space-y-10">
             <Interlinear
               words={displayVerse.words}
-              selectedId={selectedInterlinearWord?.id ?? null}
+              selectedId={selectedWordId}
               selectedLetter={selectedLetter}
               onSelect={handleSelectWord}
               onLetterClick={handleLetterClick}
+            />
+
+            <VerseMeanings
+              words={displayVerse.words}
+              selectedWordId={selectedWordId}
+              onSelect={handleSelectWord}
             />
           </div>
         )}

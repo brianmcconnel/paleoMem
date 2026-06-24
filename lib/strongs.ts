@@ -32,19 +32,64 @@ export function getStrongsDef(code: string | null | undefined): string {
   return entry.strongs_def || entry.kjv_def || '';
 }
 
+/** Split Strong's kjv_def on commas not inside parentheses. */
+function splitKjvPhrases(kjvDef: string): string[] {
+  const phrases: string[] = [];
+  let current = '';
+  let depth = 0;
+
+  for (const ch of kjvDef) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+
+    if (ch === ',' && depth === 0) {
+      if (current.trim()) phrases.push(current.trim());
+      current = '';
+      continue;
+    }
+
+    current += ch;
+  }
+
+  if (current.trim()) phrases.push(current.trim());
+  return phrases;
+}
+
+function normalizeKjvPhrase(phrase: string): string {
+  let text = phrase
+    .replace(/\[idiom\]/gi, '')
+    .replace(/\[phrase\]/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\.$/, '')
+    .trim();
+
+  // "(make, put) difference" -> "difference"
+  const verbAlternatives = text.match(/^\([^)]+\)\s+(.+)$/);
+  if (verbAlternatives) text = verbAlternatives[1].trim();
+
+  // "divide (asunder)" -> "divide"
+  text = text.replace(/\s*\([^)]*\)\s*$/g, '').trim();
+
+  return text;
+}
+
 /** Primary KJV English rendering(s) for a Strong's entry — first gloss phrase. */
 export function getStrongsKjvGloss(code: string | null | undefined): string {
   const entry = getStrongs(code);
   if (!entry?.kjv_def?.trim()) return '';
 
-  const first = entry.kjv_def
-    .split(',')[0]
-    .replace(/\[idiom\]/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const phrases = splitKjvPhrases(entry.kjv_def);
+  const normalized = phrases
+    .map(normalizeKjvPhrase)
+    .filter((phrase) => phrase && !/^unrepresented in english/i.test(phrase));
 
-  if (!first || /^unrepresented in english/i.test(first)) return '';
-  return first;
+  // Prefer a gloss that does not start with a parenthetical prefix.
+  for (let i = 0; i < phrases.length; i++) {
+    const raw = phrases[i].replace(/\[idiom\]|\[phrase\]/gi, '').trim();
+    if (!raw.startsWith('(') && normalized[i]) return normalized[i];
+  }
+
+  return normalized[0] || '';
 }
 
 export function getEnglishTranslation(word: {

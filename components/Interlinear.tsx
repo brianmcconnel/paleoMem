@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { stripPoints, getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
-import { getStrongs, getStrongsDef, getEnglishTranslation } from '../lib/strongs';
+import { getStrongs, getStrongsDef } from '../lib/strongs';
 import { LetterCard } from './LetterCard';
 
 interface InterlinearProps {
@@ -29,7 +29,11 @@ export function Interlinear({
     [words],
   );
 
-  const renderHebrewWithHighlight = (hebrew: string, isActiveWord: boolean) => {
+  const renderHebrewWithHighlight = (
+    word: InterlinearWord,
+    hebrew: string,
+    isActiveWord: boolean,
+  ) => {
     if (!isActiveWord || !selectedLetter) {
       return <span dir="rtl">{hebrew}</span>;
     }
@@ -51,6 +55,7 @@ export function Interlinear({
               title={base ? `Select letter ${base}` : ''}
               onClick={(e) => {
                 e.stopPropagation();
+                onSelect(word);
                 if (onLetterClick && base) onLetterClick(base);
               }}
             >
@@ -128,8 +133,9 @@ export function Interlinear({
       <div className="space-y-4">
         {parsedWords.map(({ word, parsed }) => {
           const isSelected = selectedId === word.id;
+          const strongsEntry = getStrongs(word.strongs);
           const strongsDef = getStrongsDef(word.strongs);
-          const englishPhrase = getEnglishTranslation(word);
+          const pronunciation = strongsEntry?.pron || word.transliteration || '';
 
           return (
             <div
@@ -155,7 +161,7 @@ export function Interlinear({
                     className="scripture-hebrew text-3xl text-[var(--pw-hebrew)] leading-none"
                     dir="rtl"
                   >
-                    {renderHebrewWithHighlight(word.hebrew, isSelected)}
+                    {renderHebrewWithHighlight(word, word.hebrew, isSelected)}
                   </div>
                   <span
                     role="link"
@@ -192,22 +198,21 @@ export function Interlinear({
                   >
                     {word.strongs}
                   </span>
-                  {word.transliteration && (
-                    <span className="text-[10px] text-[var(--pw-text-muted)] font-mono shrink-0">
-                      {word.transliteration}
-                    </span>
-                  )}
                 </div>
 
                 <div dir="ltr" className="text-left">
-                  {englishPhrase && (
-                    <div className="text-sm font-medium text-[var(--pw-english)] leading-tight">
-                      {englishPhrase}
+                  {pronunciation && (
+                    <div className="text-sm font-medium text-[var(--pw-english)] leading-tight font-mono">
+                      {pronunciation}
                     </div>
                   )}
 
                   {strongsDef && (
-                    <div className="text-xs text-[var(--pw-text-muted)] leading-snug mt-2 border-t border-[var(--pw-border)] pt-2">
+                    <div
+                      className={`text-xs text-[var(--pw-text-muted)] leading-snug ${
+                        pronunciation ? 'mt-2 border-t border-[var(--pw-border)] pt-2' : ''
+                      }`}
+                    >
                       {strongsDef}
                     </div>
                   )}
