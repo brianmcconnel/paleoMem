@@ -10,22 +10,26 @@ import {
   getPrevReference,
   normalizeReference,
 } from '../data/books';
-import { getMaxVerse } from '../data/verses';
+import { getMaxVerse, getRandomOtVerseRef } from '../data/verses';
 
 interface VerseNavigatorProps {
   currentRef: string;
   onSelect: (ref: string) => void;
 }
 
+type PickerStep = 'book' | 'chapter' | 'verse';
+
 export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
   const { book: activeBook, chapter: activeChapter, verse: activeVerse } = parseRef(currentRef);
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [pickerStep, setPickerStep] = useState<PickerStep>('book');
   const [pickerBook, setPickerBook] = useState(activeBook);
   const [pickerChapter, setPickerChapter] = useState(activeChapter);
   const [pickerVerse, setPickerVerse] = useState(activeVerse);
   const [quickRef, setQuickRef] = useState(currentRef);
   const [isEditingRef, setIsEditingRef] = useState(false);
+  const [castingLots, setCastingLots] = useState(false);
 
   const selectedBookRef = useRef<HTMLButtonElement>(null);
   const selectedChapterRef = useRef<HTMLButtonElement>(null);
@@ -38,6 +42,7 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
     setPickerBook(parsed.book);
     setPickerChapter(parsed.chapter);
     setPickerVerse(parsed.verse);
+    setPickerStep('book');
     setQuickRef(currentRef);
     setIsEditingRef(false);
     setIsExpanded(true);
@@ -53,7 +58,7 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
     selectedBookRef.current?.scrollIntoView({ block: 'nearest' });
     selectedChapterRef.current?.scrollIntoView({ block: 'nearest' });
     selectedVerseRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [isExpanded, pickerBook, pickerChapter, pickerVerse]);
+  }, [isExpanded, pickerStep, pickerBook, pickerChapter, pickerVerse]);
 
   useEffect(() => {
     const collapse = () => closePanel();
@@ -76,11 +81,13 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
     setPickerBook(book);
     setPickerChapter(1);
     setPickerVerse(1);
+    setPickerStep('chapter');
   };
 
   const selectChapter = (chapter: number) => {
     setPickerChapter(chapter);
     setPickerVerse(1);
+    setPickerStep('verse');
   };
 
   const selectVerse = (verse: number) => {
@@ -91,14 +98,28 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
     commitRef(normalizeReference(quickRef));
   };
 
+  const castLots = () => {
+    setCastingLots(true);
+    window.setTimeout(() => {
+      commitRef(getRandomOtVerseRef());
+      setCastingLots(false);
+    }, 480);
+  };
+
   const pickerItemClass = (selected: boolean) =>
     selected
       ? 'bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] font-medium'
       : 'text-[var(--pw-text-soft)] hover:bg-[var(--pw-bg-elevated)]';
 
+  const stepTitle =
+    pickerStep === 'book'
+      ? 'Choose a book'
+      : pickerStep === 'chapter'
+        ? `${pickerBook} — choose a chapter`
+        : `${pickerBook} ${pickerChapter} — choose a verse`;
+
   return (
     <div className="w-full space-y-2">
-      {/* Compact bar: prev / reference / next */}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -136,64 +157,79 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
 
       {isExpanded && (
         <div className="p-3 bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] rounded-md text-xs space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] mb-1">
-                Books
-              </div>
-              <div className="overflow-y-auto max-h-44 flex flex-col gap-0.5 pr-1">
-                {OT_BOOKS.map((b) => (
-                  <button
-                    key={b.name}
-                    type="button"
-                    ref={pickerBook === b.name ? selectedBookRef : undefined}
-                    onClick={() => selectBook(b.name)}
-                    className={`px-2 py-1 rounded cursor-pointer select-none text-sm text-left ${pickerItemClass(pickerBook === b.name)}`}
-                  >
-                    {b.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <button
+            type="button"
+            onClick={castLots}
+            disabled={castingLots}
+            className="w-full btn btn-gold text-sm font-medium py-2 disabled:opacity-70"
+            title="The lot is cast into the lap; but the whole disposing thereof is of the LORD. — Proverbs 16:33 (KJV)"
+          >
+            {castingLots ? 'Casting lots…' : 'Cast lots before the Lord'}
+          </button>
 
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] mb-1">
-                Chapters
-              </div>
-              <div className="overflow-y-auto max-h-44 grid grid-cols-5 gap-1 text-center pr-1">
-                {Array.from({ length: maxChapters }, (_, i) => i + 1).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    ref={pickerChapter === c ? selectedChapterRef : undefined}
-                    onClick={() => selectChapter(c)}
-                    className={`py-1 text-xs rounded cursor-pointer select-none ${pickerItemClass(pickerChapter === c)}`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] mb-1">
-                Verses
-              </div>
-              <div className="overflow-y-auto max-h-44 grid grid-cols-6 gap-1 text-center pr-1">
-                {Array.from({ length: maxVerse }, (_, i) => i + 1).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    ref={pickerVerse === v ? selectedVerseRef : undefined}
-                    onClick={() => selectVerse(v)}
-                    className={`py-1 text-xs rounded cursor-pointer select-none ${pickerItemClass(pickerVerse === v)}`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
+          <div className="flex items-center gap-2">
+            {pickerStep !== 'book' && (
+              <button
+                type="button"
+                onClick={() => setPickerStep(pickerStep === 'verse' ? 'chapter' : 'book')}
+                className="btn text-xs px-2 py-1 shrink-0"
+                aria-label="Go back one step"
+              >
+                ← Back
+              </button>
+            )}
+            <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)] flex-1">
+              {stepTitle}
             </div>
           </div>
+
+          {pickerStep === 'book' && (
+            <div className="overflow-y-auto max-h-52 flex flex-col gap-0.5 pr-1">
+              {OT_BOOKS.map((b) => (
+                <button
+                  key={b.name}
+                  type="button"
+                  ref={pickerBook === b.name ? selectedBookRef : undefined}
+                  onClick={() => selectBook(b.name)}
+                  className={`px-2 py-1.5 rounded cursor-pointer select-none text-sm text-left ${pickerItemClass(pickerBook === b.name)}`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {pickerStep === 'chapter' && (
+            <div className="overflow-y-auto max-h-52 grid grid-cols-6 sm:grid-cols-8 gap-1 text-center pr-1">
+              {Array.from({ length: maxChapters }, (_, i) => i + 1).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  ref={pickerChapter === c ? selectedChapterRef : undefined}
+                  onClick={() => selectChapter(c)}
+                  className={`py-1.5 text-xs rounded cursor-pointer select-none ${pickerItemClass(pickerChapter === c)}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {pickerStep === 'verse' && (
+            <div className="overflow-y-auto max-h-52 grid grid-cols-6 sm:grid-cols-8 gap-1 text-center pr-1">
+              {Array.from({ length: maxVerse }, (_, i) => i + 1).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  ref={pickerVerse === v ? selectedVerseRef : undefined}
+                  onClick={() => selectVerse(v)}
+                  className={`py-1.5 text-xs rounded cursor-pointer select-none ${pickerItemClass(pickerVerse === v)}`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="flex gap-2 items-center pt-1 border-t border-[var(--pw-border)]">
             <input

@@ -220,6 +220,16 @@ export function getMaxVerse(book: string, chapter: number): number {
   return chapterVerseMax.get(key) || 50; // safe fallback
 }
 
+/** Pick a random Old Testament verse that has OSHB Hebrew data. */
+export function getRandomOtVerseRef(): string {
+  if (hebrewData.length === 0) {
+    return DEFAULT_VERSE.ref;
+  }
+
+  const pick = hebrewData[Math.floor(Math.random() * hebrewData.length)];
+  return pick.ref;
+}
+
 export function getKjvText(book: string, chapter: number, verse: number): string {
   if (kjvData.length === 0) {
     return 'KJV data not loaded. Run `npm run data:fetch` to retrieve from open source.';
