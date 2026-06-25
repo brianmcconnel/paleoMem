@@ -227,8 +227,8 @@ export function splitWords(verse: string): string[] {
 
 /** Parse a single word (Hebrew) into letters + pictographic data */
 export function parseWord(word: string): ParsedWord {
-  const original = word;
-  const cleaned = stripPoints(word);
+  const original = word.replace(/\//g, '');
+  const cleaned = stripPoints(original);
   const letters: ParsedLetter[] = [];
 
   for (const ch of cleaned) {

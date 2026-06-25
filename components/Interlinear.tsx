@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
-import { stripPoints, getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
+import { getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
+import { HebrewGraphemeText } from './HebrewGraphemeText';
 import {
   getStrongs,
   getStrongsDisplay,
@@ -43,32 +44,17 @@ export function Interlinear({
       return <span dir="rtl">{hebrew}</span>;
     }
 
-    const chars = Array.from(hebrew);
     return (
-      <span dir="rtl">
-        {chars.map((ch, idx) => {
-          const base = stripPoints(ch);
-          const isMatch = base === selectedLetter;
-          return (
-            <span
-              key={idx}
-              className={
-                isMatch
-                  ? 'letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm'
-                  : 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/30 rounded-sm'
-              }
-              title={base ? `Select letter ${base}` : ''}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect(word);
-                if (onLetterClick && base) onLetterClick(base);
-              }}
-            >
-              {ch}
-            </span>
-          );
-        })}
-      </span>
+      <HebrewGraphemeText
+        text={hebrew}
+        selectedLetter={selectedLetter}
+        highlightClassName="letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm"
+        consonantClassName="cursor-pointer hover:bg-[var(--pw-accent-gold)]/30 rounded-sm"
+        onConsonantClick={(consonant) => {
+          onSelect(word);
+          onLetterClick?.(consonant);
+        }}
+      />
     );
   };
 

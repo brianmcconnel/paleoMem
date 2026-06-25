@@ -6,6 +6,8 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /* Consonants only — nikud/cantillation fall through to Noto Sans Hebrew */
+  unicode-range: U+05D0-05EA;
 }
 
 /* paleoMem — theme tokens (html[data-theme] only — :root must not pin dark vars) */
@@ -136,6 +138,8 @@ html {
   font-family: var(--font-noto-hebrew), 'Noto Sans Hebrew', serif;
   font-size: 1.35rem;
   line-height: 1.7;
+  font-feature-settings: 'kern' 1;
+  font-synthesis: none;
 }
 
 .letter {

@@ -11,7 +11,7 @@ import { HebrewReaderPanel } from '../components/HebrewReaderPanel';
 import { normalizeReference } from '../data/books';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
 import { getLastVerse, setLastVerse } from '../lib/site-cookies';
-import { stripPoints } from '../lib/pictograph';
+import { HebrewGraphemeText } from '../components/HebrewGraphemeText';
 
 export default function paleoMemPage() {
   const [currentRef, setCurrentRef] = useState<string>(DEFAULT_VERSE.ref);
@@ -96,33 +96,14 @@ export default function paleoMemPage() {
                       key={wi}
                       className={isWordSelected ? 'word-in-passage' : undefined}
                     >
-                      {Array.from(word.hebrew).map((ch, ci) => {
-                        const base = stripPoints(ch);
-                        const isLetterHighlighted =
-                          !!selectedLetter && base === selectedLetter;
-                        const isConsonant = !!base && /[א-ת]/.test(base);
-                        return (
-                          <span
-                            key={`${wi}-${ci}`}
-                            className={
-                              isLetterHighlighted
-                                ? 'letter-in-passage'
-                                : isConsonant
-                                  ? 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/20 rounded-sm'
-                                  : ''
-                            }
-                            title={base ? `Click to select ${word.strongs} • letter ${base}` : ''}
-                            onClick={() => {
-                              if (isConsonant && base) {
-                                setSelectedWordId(word.id);
-                                setSelectedLetter(base);
-                              }
-                            }}
-                          >
-                            {ch}
-                          </span>
-                        );
-                      })}
+                      <HebrewGraphemeText
+                        text={word.hebrew}
+                        selectedLetter={selectedLetter}
+                        onConsonantClick={(consonant) => {
+                          setSelectedWordId(word.id);
+                          setSelectedLetter(consonant);
+                        }}
+                      />
                       {wi < displayVerse.words.length - 1 && ' '}
                     </span>
                   );
