@@ -4,15 +4,9 @@ import type { HebrewFontMode } from './site-cookies';
 const HEBREW_LETTER = /[\u05D0-\u05EA]/;
 const HEBREW_MARK = /[\u0591-\u05C7]/;
 
-let graphemeSegmenter: Intl.Segmenter | null | undefined;
-
 function getGraphemeSegmenter(): Intl.Segmenter | null {
-  if (graphemeSegmenter !== undefined) return graphemeSegmenter;
-  graphemeSegmenter =
-    typeof Intl !== 'undefined' && 'Segmenter' in Intl
-      ? new Intl.Segmenter('he', { granularity: 'grapheme' })
-      : null;
-  return graphemeSegmenter;
+  // Manual grapheme splitting only — Intl.Segmenter ICU data can differ between Node (SSR) and browsers.
+  return null;
 }
 
 /** Split Hebrew text into display graphemes (base letter + attached points). */

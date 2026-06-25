@@ -5,18 +5,12 @@ export const THEME_COLORS: Record<ThemeMode, string> = {
   light: '#ffffff',
 };
 
-/** Apply theme to the document (attribute, color-scheme, mobile browser chrome). */
+/** Apply theme to the document (data-theme + mobile browser chrome; backgrounds via CSS). */
 export function applyThemeToDocument(theme: ThemeMode): void {
   const root = document.documentElement;
   const bg = THEME_COLORS[theme];
 
   root.setAttribute('data-theme', theme);
-  root.style.colorScheme = theme;
-  root.style.backgroundColor = bg;
-
-  if (document.body) {
-    document.body.style.backgroundColor = bg;
-  }
 
   // Next.js may emit prefers-color-scheme theme-color tags — remove so app choice wins on mobile.
   document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {

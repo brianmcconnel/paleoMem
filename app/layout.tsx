@@ -74,7 +74,10 @@ export default function RootLayout({
         />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
+      <body
+        className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]"
+        suppressHydrationWarning
+      >
         <PwaRegister />
         <PwaInstallPrompt />
         <PwaUpdatePrompt />
