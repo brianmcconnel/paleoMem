@@ -157,16 +157,6 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
 
       {isExpanded && (
         <div className="p-3 bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] rounded-md text-xs space-y-3">
-          <button
-            type="button"
-            onClick={castLots}
-            disabled={castingLots}
-            className="w-full btn btn-gold text-sm font-medium py-2 disabled:opacity-70"
-            title="The lot is cast into the lap; but the whole disposing thereof is of the LORD. — Proverbs 16:33 (KJV)"
-          >
-            {castingLots ? 'Casting lots…' : 'Cast lots before the Lord'}
-          </button>
-
           <div className="flex items-center gap-2">
             {pickerStep !== 'book' && (
               <button
@@ -249,6 +239,16 @@ export function VerseNavigator({ currentRef, onSelect }: VerseNavigatorProps) {
               Go
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={castLots}
+            disabled={castingLots}
+            className="w-full btn btn-gold text-sm font-medium py-2 disabled:opacity-70"
+            title="The lot is cast into the lap; but the whole disposing thereof is of the LORD. — Proverbs 16:33 (KJV)"
+          >
+            {castingLots ? 'Casting lots…' : 'Cast lots before the Lord'}
+          </button>
         </div>
       )}
     </div>
