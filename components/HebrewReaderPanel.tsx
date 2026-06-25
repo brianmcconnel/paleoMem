@@ -23,33 +23,24 @@ export function HebrewReaderPanel({ children }: HebrewReaderPanelProps) {
           {children}
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-          <button
-            type="button"
-            onClick={toggleMinimized}
-            className={`rounded p-0.5 transition-colors ${
-              ready && minimized
-                ? 'text-[var(--pw-accent-gold)]'
-                : 'text-[var(--pw-text-muted)] hover:text-[var(--pw-accent-gold)]'
-            }`}
-            title={
-              minimized
-                ? 'Show Hebrew reading help'
-                : 'Hide Hebrew reading help'
-            }
-            aria-pressed={ready && !minimized}
-            aria-label={
-              minimized
-                ? 'Show Hebrew reading help'
-                : 'Hide Hebrew reading help'
-            }
-          >
-            <InfoIcon />
-          </button>
-          <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-muted)]">
-            Hebrew
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={toggleMinimized}
+          className={`shrink-0 rounded p-0.5 pt-0.5 transition-colors ${
+            ready && minimized
+              ? 'text-[var(--pw-accent-gold)]'
+              : 'text-[var(--pw-text-muted)] hover:text-[var(--pw-accent-gold)]'
+          }`}
+          title={
+            minimized ? 'Show Hebrew reading help' : 'Hide Hebrew reading help'
+          }
+          aria-pressed={ready && !minimized}
+          aria-label={
+            minimized ? 'Show Hebrew reading help' : 'Hide Hebrew reading help'
+          }
+        >
+          <InfoIcon />
+        </button>
       </div>
 
       {ready && !minimized && (
