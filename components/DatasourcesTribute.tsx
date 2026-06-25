@@ -68,6 +68,18 @@ export function DatasourcesTribute() {
               <div>
                 Traditional Paleo-Hebrew studies (in the tradition of teachers such as Frank Seekins and others who have explored the ancient letter pictures). These are interpretive tools meant to enrich study, not replace the plain text.
               </div>
+              <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
+                Optional Paleo-Hebrew display font:{' '}
+                <a
+                  href="https://github.com/edenberger/Robo-PaleoHeb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--pw-link)] hover:underline"
+                >
+                  Robo-PaleoHeb
+                </a>{' '}
+                (Apache 2.0) by Eden Berger, based on work by Kris J. Udd.
+              </div>
             </div>
           </div>
           <div className="mt-4 text-[10px] text-[var(--pw-text-faint)] border-t border-[var(--pw-border)] pt-3">

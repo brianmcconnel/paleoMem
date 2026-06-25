@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
 import { PwaRegister } from '../components/PwaRegister';
 import { ReadingHelpProvider } from '../components/ReadingHelpContext';
+import { HebrewFontProvider } from '../components/HebrewFontContext';
 import { ThemeProvider } from '../components/ThemeContext';
 import { pwaUrl } from '../lib/pwa';
 import { THEME_BOOTSTRAP_SCRIPT } from '../lib/site-cookies';
@@ -60,6 +61,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${notoHebrew.variable} h-full antialiased`}
       data-theme="dark"
+      data-hebrew-font="modern"
       suppressHydrationWarning
     >
       <head>
@@ -68,10 +70,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
         <PwaRegister />
         <ThemeProvider>
-          <ReadingHelpProvider>
-            {children}
-            <HelpGuide />
-          </ReadingHelpProvider>
+          <HebrewFontProvider>
+            <ReadingHelpProvider>
+              {children}
+              <HelpGuide />
+            </ReadingHelpProvider>
+          </HebrewFontProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { HebrewFontToggle } from './HebrewFontToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 const HEADER_OFFSET = 48; // matches h-12
@@ -37,6 +38,7 @@ export function Header() {
         </div>
 
         <nav className="flex items-center gap-2 sm:gap-3 text-sm shrink-0">
+          <HebrewFontToggle />
           <ThemeToggle />
           <a
             href="#reader"

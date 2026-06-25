@@ -2,9 +2,11 @@ const VISITED_COOKIE = 'paleomem_visited';
 const LAST_VERSE_COOKIE = 'paleomem_last_verse';
 const RTL_HELP_MINIMIZED_COOKIE = 'paleomem_rtl_help_minimized';
 const THEME_COOKIE = 'paleomem_theme';
+const HEBREW_FONT_COOKIE = 'paleomem_hebrew_font';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
 export type ThemeMode = 'dark' | 'light';
+export type HebrewFontMode = 'modern' | 'paleo';
 
 function cookiePath(): string {
   if (typeof window === 'undefined') return '/';
@@ -62,5 +64,14 @@ export function setTheme(theme: ThemeMode): void {
   setCookie(THEME_COOKIE, theme);
 }
 
-/** Inline script: apply saved theme before first paint (avoids flash). */
-export const THEME_BOOTSTRAP_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|;\\s*)paleomem_theme=([^;]*)/);var t=m?decodeURIComponent(m[1]):'dark';if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}})();`;
+/** Hebrew script font — defaults to modern pointed Hebrew (Noto). */
+export function getHebrewFont(): HebrewFontMode {
+  return getCookie(HEBREW_FONT_COOKIE) === 'paleo' ? 'paleo' : 'modern';
+}
+
+export function setHebrewFont(font: HebrewFontMode): void {
+  setCookie(HEBREW_FONT_COOKIE, font);
+}
+
+/** Inline script: apply saved theme and Hebrew font before first paint. */
+export const THEME_BOOTSTRAP_SCRIPT = `(function(){try{var c=document.cookie;var tm=c.match(/(?:^|;\\s*)paleomem_theme=([^;]*)/);var t=tm?decodeURIComponent(tm[1]):'dark';if(t==='light')document.documentElement.setAttribute('data-theme','light');var fm=c.match(/(?:^|;\\s*)paleomem_hebrew_font=([^;]*)/);var f=fm?decodeURIComponent(fm[1]):'modern';document.documentElement.setAttribute('data-hebrew-font',f==='paleo'?'paleo':'modern');}catch(e){}})();`;

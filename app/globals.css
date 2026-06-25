@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+@font-face {
+  font-family: 'Robo PaleoHeb';
+  src: url('/paleoMem/fonts/Robo-PaleoHeb.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* paleoMem — reverent dark theme (custom CSS vars) */
 :root,
 [data-theme='dark'] {
@@ -78,6 +86,16 @@
 
   --pw-shadow: rgba(15, 23, 42, 0.12);
   --pw-modal: rgba(15, 23, 42, 0.45);
+}
+
+:root {
+  --font-paleo-hebrew: 'Robo PaleoHeb', var(--font-noto-hebrew), 'Noto Sans Hebrew', serif;
+}
+
+html[data-hebrew-font='paleo'] .scripture-hebrew,
+html[data-hebrew-font='paleo'] .letter,
+html[data-hebrew-font='paleo'] .hebrew {
+  font-family: var(--font-paleo-hebrew);
 }
 
 html {
