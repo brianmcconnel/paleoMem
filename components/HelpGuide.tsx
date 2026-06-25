@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { HelpInterlinearExample } from './HelpInterlinearExample';
 import { HebrewRtlNote, HEBREW_RTL_LABEL } from './HebrewRtlHint';
+import { scrollToSection } from '../lib/scroll-section';
 import { hasVisitedBefore, markVisited } from '../lib/site-cookies';
 
 function InfoIcon() {
@@ -25,16 +26,9 @@ function InfoIcon() {
   );
 }
 
-const HEADER_OFFSET = 48;
-
 function scrollToDedication() {
-  const el = document.getElementById('dedication');
-  if (!el) return;
-
-  const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  scrollToSection('dedication');
   window.history.replaceState(null, '', '#dedication');
-  window.dispatchEvent(new CustomEvent('paleomem:collapse-picker'));
 }
 
 function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {

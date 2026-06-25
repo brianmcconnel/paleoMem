@@ -23,7 +23,7 @@ function FaqItem({ question, children }: { question: string; children: React.Rea
 
 export function Faq() {
   return (
-    <section id="faq" className="mb-12 scroll-mt-14">
+    <section id="faq" className="mb-12">
       <div className="mb-6">
         <h2 className="text-2xl font-semibold tracking-tight">FAQ</h2>
         <p className="text-sm text-[var(--pw-text-muted)]">Common questions about paleoMem</p>

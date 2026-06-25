@@ -1,19 +1,9 @@
 'use client';
 
 import React from 'react';
+import { scrollToSection } from '../lib/scroll-section';
 import { HebrewFontToggle } from './HebrewFontToggle';
 import { ThemeToggle } from './ThemeToggle';
-
-const HEADER_OFFSET = 48; // matches h-12
-
-function scrollToSection(id: string) {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-  window.dispatchEvent(new CustomEvent('paleomem:collapse-picker'));
-}
 
 export function Header() {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {

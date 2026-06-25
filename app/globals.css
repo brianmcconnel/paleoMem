@@ -118,8 +118,15 @@ html[data-theme='dark'] body {
   min-height: 100dvh;
 }
 
-#insights {
-  scroll-margin-top: min(55vh, 560px);
+#reader {
+  scroll-margin-top: 3rem;
+}
+
+#insights,
+#faq,
+#datasources,
+#dedication {
+  scroll-margin-top: calc(3rem + min(55vh, 560px) + 0.5rem);
 }
 
 :root {
