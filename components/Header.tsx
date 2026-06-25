@@ -31,13 +31,6 @@ export function Header() {
           <HebrewFontToggle />
           <ThemeToggle />
           <a
-            href="#reader"
-            onClick={(e) => handleNavClick(e, 'reader')}
-            className="hover:text-[var(--pw-accent-gold)] transition-colors"
-          >
-            Reader
-          </a>
-          <a
             href="#insights"
             onClick={(e) => handleNavClick(e, 'insights')}
             className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
