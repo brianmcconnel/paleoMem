@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { HELP_EXAMPLE_WORD } from '../data/help-example';
 import { getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
 import { getStrongs, getStrongsDisplay } from '../lib/strongs';
@@ -9,20 +9,90 @@ import { HebrewGraphemeText } from './HebrewGraphemeText';
 export function HelpInterlinearExample() {
   const [wordSelected, setWordSelected] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+  const [demoActive, setDemoActive] = useState(true);
+  const [demoLetter, setDemoLetter] = useState<string | null>(null);
+  const demoRunRef = useRef(0);
 
   const parsed = useMemo(() => parseWord(HELP_EXAMPLE_WORD.hebrew), []);
   const strongsDisplay = getStrongsDisplay(HELP_EXAMPLE_WORD.strongs, HELP_EXAMPLE_WORD.hebrew);
   const pronunciation = strongsDisplay.pronunciation || HELP_EXAMPLE_WORD.transliteration;
 
+  const activeLetter = demoActive ? demoLetter : selectedLetter;
+  const showWordSelected = demoActive ? demoLetter !== null : wordSelected;
+
+  const stopDemo = () => {
+    setDemoActive(false);
+    setDemoLetter(null);
+  };
+
   const selectWord = () => {
+    stopDemo();
     setWordSelected(true);
     setSelectedLetter(null);
   };
 
   const selectLetter = (consonant: string) => {
+    stopDemo();
     setWordSelected(true);
     setSelectedLetter((current) => (current === consonant ? null : consonant));
   };
+
+  useEffect(() => {
+    if (!demoActive) return;
+
+    const letters = parsed.letters.map((letter) => letter.normalized);
+    if (letters.length === 0) {
+      setDemoActive(false);
+      return;
+    }
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
+      setDemoActive(false);
+      return;
+    }
+
+    const runId = ++demoRunRef.current;
+    const timers: number[] = [];
+    const schedule = (fn: () => void, delay: number) => {
+      timers.push(window.setTimeout(fn, delay));
+    };
+
+    let elapsed = 700;
+    const letterMs = 950;
+    const gapMs = 450;
+    const cycles = 2;
+
+    for (let cycle = 0; cycle < cycles; cycle += 1) {
+      for (const letter of letters) {
+        schedule(() => {
+          if (demoRunRef.current !== runId) return;
+          setDemoLetter(letter);
+        }, elapsed);
+        elapsed += letterMs;
+      }
+
+      schedule(() => {
+        if (demoRunRef.current !== runId) return;
+        setDemoLetter(null);
+      }, elapsed);
+      elapsed += gapMs;
+    }
+
+    schedule(() => {
+      if (demoRunRef.current !== runId) return;
+      setDemoActive(false);
+      setDemoLetter(null);
+    }, elapsed);
+
+    return () => {
+      demoRunRef.current += 1;
+      timers.forEach((id) => window.clearTimeout(id));
+    };
+  }, [demoActive, parsed.letters]);
 
   return (
     <div className="rounded-lg border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/60 p-3 space-y-3">
@@ -51,7 +121,7 @@ export function HelpInterlinearExample() {
                 }
               }}
               className={
-                wordSelected && !selectedLetter
+                showWordSelected && !activeLetter
                   ? 'kjv-word-selected cursor-pointer'
                   : 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/15 rounded-sm'
               }
@@ -67,24 +137,33 @@ export function HelpInterlinearExample() {
       </div>
 
       {/* Hebrew reader box */}
-      <div className="card p-2.5">
+      <div
+        className={`card p-2.5 relative ${demoActive ? 'help-hebrew-demo-pulse' : ''}`}
+      >
+        {demoActive && (
+          <span className="absolute top-1.5 left-2 text-[9px] uppercase tracking-widest text-[var(--pw-accent-gold)]">
+            Tap letters
+          </span>
+        )}
         <div
-          className="scripture-hebrew text-[var(--pw-hebrew)] text-xl leading-relaxed select-none"
+          className="scripture-hebrew text-[var(--pw-hebrew)] text-xl leading-relaxed select-none pt-3"
           dir="rtl"
           title="Click a letter to highlight its pictograph card below"
         >
           <HebrewGraphemeText
             text={HELP_EXAMPLE_WORD.hebrew}
-            selectedLetter={selectedLetter}
+            selectedLetter={activeLetter}
             onConsonantClick={selectLetter}
           />
         </div>
       </div>
 
       <p className="text-[10px] text-[var(--pw-text-faint)] leading-relaxed">
-        {selectedLetter ? (
+        {demoActive ? (
+          <>Letters highlight one by one — try tapping them yourself.</>
+        ) : activeLetter ? (
           <>
-            Letter <span className="text-[var(--pw-accent-gold)] font-medium">{selectedLetter}</span>{' '}
+            Letter <span className="text-[var(--pw-accent-gold)] font-medium">{activeLetter}</span>{' '}
             is highlighted above and in the matching card below.
           </>
         ) : (
@@ -97,11 +176,11 @@ export function HelpInterlinearExample() {
           type="button"
           onClick={selectWord}
           className={`group shrink-0 text-left rounded-xl border p-2.5 min-w-[140px] max-w-[200px] transition-all card ${
-            wordSelected
+            showWordSelected
               ? 'border-[var(--pw-accent-gold)] ring-2 ring-[var(--pw-accent-gold)]/30 shadow-md'
               : 'border-[var(--pw-border)] hover:border-[var(--pw-accent-gold)]/60'
           }`}
-          aria-pressed={wordSelected}
+          aria-pressed={showWordSelected}
         >
           <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1 mb-1">
             <div
@@ -110,8 +189,8 @@ export function HelpInterlinearExample() {
             >
               <HebrewGraphemeText
                 text={HELP_EXAMPLE_WORD.hebrew}
-                selectedLetter={selectedLetter}
-                interactive={!!selectedLetter}
+                selectedLetter={activeLetter}
+                interactive={!!activeLetter}
                 highlightClassName="letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm"
                 onConsonantClick={selectLetter}
               />
@@ -139,7 +218,7 @@ export function HelpInterlinearExample() {
                 }
               }}
               className={`font-mono text-[10px] px-1.5 py-px rounded border cursor-pointer hover:underline shrink-0 ${
-                wordSelected && selectedLetter
+                showWordSelected && activeLetter
                   ? 'bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] border-[var(--pw-accent-gold)] font-semibold'
                   : 'bg-[var(--pw-bg-elevated)] text-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)]/50 hover:bg-[var(--pw-accent-gold)]/10'
               }`}
@@ -168,16 +247,18 @@ export function HelpInterlinearExample() {
         </button>
 
         {parsed.letters.map((letter, idx) => {
-          const isHighlighted = wordSelected && selectedLetter === letter.normalized;
+          const isHighlighted = showWordSelected && activeLetter === letter.normalized;
           return (
             <button
               key={idx}
               type="button"
               onClick={() => selectLetter(letter.normalized)}
-              className={`letter-card shrink-0 w-[118px] text-left cursor-pointer ${
+              className={`letter-card shrink-0 w-[118px] text-left cursor-pointer transition-shadow ${
                 isHighlighted
                   ? 'border-[var(--pw-accent-gold)] ring-2 ring-[var(--pw-accent-gold)]/30 bg-[var(--pw-letter-bg)]'
-                  : ''
+                  : demoActive && demoLetter === letter.normalized
+                    ? 'border-[var(--pw-accent-gold)]/70 ring-2 ring-[var(--pw-accent-gold)]/20'
+                    : ''
               }`}
             >
               <div className="letter text-[var(--pw-hebrew)] mb-1 text-center">{letter.normalized}</div>

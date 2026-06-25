@@ -293,3 +293,23 @@ html {
 .letter-in-passage:hover {
   box-shadow: 0 0 0 2px rgba(197, 164, 110, 0.4);
 }
+
+@keyframes help-hebrew-demo-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(197, 164, 110, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(197, 164, 110, 0.5);
+  }
+}
+
+.help-hebrew-demo-pulse {
+  animation: help-hebrew-demo-ring 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-hebrew-demo-pulse {
+    animation: none;
+  }
+}
