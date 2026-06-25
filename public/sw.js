@@ -1,5 +1,5 @@
 /* paleoMem service worker — install + offline caching */
-const CACHE = 'paleomem-v4';
+const CACHE = 'paleomem-v5';
 const BASE = '/paleoMem';
 
 function isHtmlRequest(request) {
