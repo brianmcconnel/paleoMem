@@ -100,13 +100,6 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
               Strong&apos;s number to open Blue Letter Bible.
             </span>
           </li>
-          <li>
-            <span className="text-[var(--pw-text-soft)]">
-              Below that, <strong className="font-medium text-[var(--pw-text)]">Pictographic Verse
-              Meaning</strong> builds a whole-verse symbolic reading, practical sense, and emoji
-              string. Word chips link back to individual terms.
-            </span>
-          </li>
         </ol>
       </div>
 

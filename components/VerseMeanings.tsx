@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { HebrewRtlNote } from './HebrewRtlHint';
 import { ScriptureHebrew } from './ScriptureHebrew';
@@ -65,72 +65,110 @@ function WordLinks({
   );
 }
 
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`w-4 h-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export function VerseMeanings({ words, selectedWordId, onSelect }: VerseMeaningsProps) {
+  const [expanded, setExpanded] = useState(false);
   const synthesis = useMemo(() => synthesizeVerseMeaning(words), [words]);
 
   if (!words.length) return null;
 
   return (
-    <div className="space-y-4">
-      <div>
-        <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
-          Pictographic Verse Meaning
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((open) => !open)}
+        aria-expanded={expanded}
+        aria-controls="verse-meanings-panel"
+        className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-[var(--pw-bg-elevated)]/40 transition-colors"
+      >
+        <ChevronIcon open={expanded} />
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--pw-accent-gold)]">
+              Advanced tooling
+            </span>
+            <span className="text-sm font-medium text-[var(--pw-text)]">
+              Pictographic Verse Meaning
+            </span>
+          </div>
+          <p className="text-xs text-[var(--pw-text-muted)] mt-1 leading-snug">
+            Optional whole-verse synthesis — symbolic, practical, and emoji strings. Can be
+            confusing; expand when you want the big-picture pictograph read.
+          </p>
         </div>
-        <HebrewRtlNote />
-        <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
-          Whole-verse synthesis — symbolic, practical, and emoji strings follow Hebrew word order.
-        </div>
-      </div>
+      </button>
 
-      <div className="card p-4 space-y-5">
-        <div>
-          <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
-            Symbolic meaning
-          </div>
-          <div className="text-sm leading-relaxed text-[var(--pw-meaning)]">
-            {synthesis.symbolicMeaning || '—'}
-          </div>
-          <WordLinks
-            segments={synthesis.words}
-            words={words}
-            selectedWordId={selectedWordId}
-            onSelect={onSelect}
-            field="symbolicPart"
-          />
-        </div>
+      {expanded && (
+        <div id="verse-meanings-panel" className="border-t border-[var(--pw-border)] px-4 pb-4 pt-3 space-y-4">
+          <HebrewRtlNote />
+          <div className="rounded-lg border border-[var(--pw-border)] bg-[var(--pw-bg-surface)] p-4 space-y-5">
+            <div>
+              <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
+                Symbolic meaning
+              </div>
+              <div className="text-sm leading-relaxed text-[var(--pw-meaning)]">
+                {synthesis.symbolicMeaning || '—'}
+              </div>
+              <WordLinks
+                segments={synthesis.words}
+                words={words}
+                selectedWordId={selectedWordId}
+                onSelect={onSelect}
+                field="symbolicPart"
+              />
+            </div>
 
-        <div className="border-t border-[var(--pw-border)] pt-4">
-          <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
-            Original practical meaning
-          </div>
-          <div className="text-sm leading-relaxed text-[var(--pw-text-soft)]">
-            {synthesis.practicalMeaning || '—'}
-          </div>
-          <WordLinks
-            segments={synthesis.words}
-            words={words}
-            selectedWordId={selectedWordId}
-            onSelect={onSelect}
-            field="practicalPart"
-          />
-        </div>
+            <div className="border-t border-[var(--pw-border)] pt-4">
+              <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
+                Original practical meaning
+              </div>
+              <div className="text-sm leading-relaxed text-[var(--pw-text-soft)]">
+                {synthesis.practicalMeaning || '—'}
+              </div>
+              <WordLinks
+                segments={synthesis.words}
+                words={words}
+                selectedWordId={selectedWordId}
+                onSelect={onSelect}
+                field="practicalPart"
+              />
+            </div>
 
-        <div className="border-t border-[var(--pw-border)] pt-4">
-          <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
-            Emoji string
+            <div className="border-t border-[var(--pw-border)] pt-4">
+              <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
+                Emoji string
+              </div>
+              <div className="text-2xl tracking-wide text-[var(--pw-emoji)] leading-relaxed">
+                {synthesis.emojiString || '—'}
+              </div>
+              <WordLinks
+                segments={synthesis.words}
+                words={words}
+                selectedWordId={selectedWordId}
+                onSelect={onSelect}
+                field="emojiPart"
+              />
+            </div>
           </div>
-          <div className="text-2xl tracking-wide text-[var(--pw-emoji)] leading-relaxed">
-            {synthesis.emojiString || '—'}
-          </div>
-          <WordLinks
-            segments={synthesis.words}
-            words={words}
-            selectedWordId={selectedWordId}
-            onSelect={onSelect}
-            field="emojiPart"
-          />
         </div>
-      </div>
+      )}
     </div>
   );
 }
