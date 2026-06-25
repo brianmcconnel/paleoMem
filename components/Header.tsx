@@ -55,6 +55,13 @@ export function Header() {
             Insights
           </a>
           <a
+            href="#faq"
+            onClick={(e) => handleNavClick(e, 'faq')}
+            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
+          >
+            FAQ
+          </a>
+          <a
             href="#datasources"
             onClick={(e) => handleNavClick(e, 'datasources')}
             className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"

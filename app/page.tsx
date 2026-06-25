@@ -7,6 +7,7 @@ import { VerseDisplay } from '../components/VerseDisplay';
 import { Interlinear } from '../components/Interlinear';
 import { VerseMeanings } from '../components/VerseMeanings';
 import { DatasourcesTribute } from '../components/DatasourcesTribute';
+import { Faq } from '../components/Faq';
 import { HebrewReaderPanel } from '../components/HebrewReaderPanel';
 import { normalizeReference } from '../data/books';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
@@ -138,6 +139,8 @@ export default function paleoMemPage() {
             />
           </div>
         )}
+
+        <Faq />
 
         {/* Datasources & Tribute to Chuck Missler */}
         <DatasourcesTribute />
