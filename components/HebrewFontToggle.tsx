@@ -18,8 +18,8 @@ export function HebrewFontToggle() {
       }`}
       title={
         isPaleo
-          ? 'Paleo-Hebrew font (Robo-PaleoHeb) — switch to modern Hebrew'
-          : 'Modern Hebrew font (Noto) — switch to Paleo-Hebrew'
+          ? 'Paleo-Hebrew consonants (Robo-PaleoHeb) — switch to pointed modern Hebrew'
+          : 'Modern pointed Hebrew (Noto) — switch to consonant-only Paleo-Hebrew'
       }
       aria-label={
         isPaleo ? 'Switch to modern Hebrew font' : 'Switch to Paleo-Hebrew font'

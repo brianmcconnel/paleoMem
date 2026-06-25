@@ -39,24 +39,19 @@ export function Interlinear({
     word: InterlinearWord,
     hebrew: string,
     isActiveWord: boolean,
-  ) => {
-    if (!isActiveWord || !selectedLetter) {
-      return <span dir="rtl">{hebrew}</span>;
-    }
-
-    return (
-      <HebrewGraphemeText
-        text={hebrew}
-        selectedLetter={selectedLetter}
-        highlightClassName="letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm"
-        consonantClassName="cursor-pointer hover:bg-[var(--pw-accent-gold)]/30 rounded-sm"
-        onConsonantClick={(consonant) => {
-          onSelect(word);
-          onLetterClick?.(consonant);
-        }}
-      />
-    );
-  };
+  ) => (
+    <HebrewGraphemeText
+      text={hebrew}
+      selectedLetter={selectedLetter}
+      interactive={isActiveWord && !!selectedLetter}
+      highlightClassName="letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm"
+      consonantClassName="cursor-pointer hover:bg-[var(--pw-accent-gold)]/30 rounded-sm"
+      onConsonantClick={(consonant) => {
+        onSelect(word);
+        onLetterClick?.(consonant);
+      }}
+    />
+  );
 
   useEffect(() => {
     if (!selectedId || !selectedLetter) return;

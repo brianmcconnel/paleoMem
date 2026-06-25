@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ParsedWord } from '../lib/pictograph';
+import { ScriptureHebrew } from './ScriptureHebrew';
 
 interface LetterGridProps {
   word: ParsedWord | null;
@@ -22,9 +23,10 @@ export function LetterGrid({ word, showEmojis, selectedLetter }: LetterGridProps
       {word && letters.length > 0 && (
         <div className="panel p-4">
           <div className="flex items-baseline gap-3 mb-3">
-            <div className="scripture-hebrew text-3xl text-[var(--pw-hebrew)] tracking-wider">
-              {word.original}
-            </div>
+            <ScriptureHebrew
+              text={word.original}
+              className="scripture-hebrew text-3xl text-[var(--pw-hebrew)] tracking-wider"
+            />
             <div className="text-[var(--pw-text-soft)] text-sm">{letters.length} letters</div>
           </div>
 

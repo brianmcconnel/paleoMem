@@ -1,4 +1,5 @@
 import { normalizeLetter, stripPoints } from './pictograph';
+import type { HebrewFontMode } from './site-cookies';
 
 const HEBREW_LETTER = /[\u05D0-\u05EA]/;
 const HEBREW_MARK = /[\u0591-\u05C7]/;
@@ -61,4 +62,33 @@ export function graphemeConsonant(grapheme: string): string | null {
     if (norm) return norm;
   }
   return null;
+}
+
+/** Pointed modern Hebrew, or consonant-only text for Paleo-Hebrew display. */
+export function formatHebrewForDisplay(text: string, mode: HebrewFontMode = 'modern'): string {
+  const normalized = text.replace(/\//g, '');
+  if (mode === 'paleo') return stripPoints(normalized);
+  return normalized;
+}
+
+/** Split text into render units — grapheme clusters (modern) or consonants (paleo). */
+export function segmentHebrewForDisplay(
+  text: string,
+  mode: HebrewFontMode = 'modern',
+): string[] {
+  if (mode === 'paleo') return segmentHebrewConsonants(text);
+  return segmentHebrewGraphemes(text);
+}
+
+/** Consonant-only segments after stripping vowel points and cantillation. */
+export function segmentHebrewConsonants(text: string): string[] {
+  const bare = formatHebrewForDisplay(text, 'paleo');
+  const segments: string[] = [];
+
+  for (const ch of bare) {
+    if (/\s/.test(ch)) continue;
+    segments.push(ch);
+  }
+
+  return segments;
 }

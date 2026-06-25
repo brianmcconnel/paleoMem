@@ -12,12 +12,14 @@ import { normalizeReference } from '../data/books';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
 import { getLastVerse, setLastVerse } from '../lib/site-cookies';
 import { HebrewGraphemeText } from '../components/HebrewGraphemeText';
+import { useHebrewFont } from '../components/HebrewFontContext';
 
 export default function paleoMemPage() {
   const [currentRef, setCurrentRef] = useState<string>(DEFAULT_VERSE.ref);
   const [verseReady, setVerseReady] = useState(false);
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+  const { font: hebrewFont } = useHebrewFont();
 
   useEffect(() => {
     const saved = getLastVerse();
@@ -108,7 +110,7 @@ export default function paleoMemPage() {
                     </span>
                   );
                 })}
-                {displayVerse.hebrew.match(/[׃]$/) && '׃'}
+                {hebrewFont === 'modern' && displayVerse.hebrew.match(/[׃]$/) && '׃'}
               </HebrewReaderPanel>
             ) : (
               <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)]">

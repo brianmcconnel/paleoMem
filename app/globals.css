@@ -99,6 +99,7 @@ html[data-hebrew-font='paleo'] .scripture-hebrew,
 html[data-hebrew-font='paleo'] .letter,
 html[data-hebrew-font='paleo'] .hebrew {
   font-family: var(--font-paleo-hebrew);
+  letter-spacing: 0.04em;
 }
 
 html {

@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { HebrewRtlNote } from './HebrewRtlHint';
+import { ScriptureHebrew } from './ScriptureHebrew';
 import { synthesizeVerseMeaning } from '../lib/word-meaning';
 
 interface VerseMeaningsProps {
@@ -52,9 +53,10 @@ function WordLinks({
             title={`${seg.strongs} — ${part}`}
             aria-pressed={isSelected}
           >
-            <span className="scripture-hebrew text-[var(--pw-hebrew)] mr-1.5" dir="rtl">
-              {seg.hebrew}
-            </span>
+            <ScriptureHebrew
+              text={seg.hebrew}
+              className="scripture-hebrew text-[var(--pw-hebrew)] mr-1.5"
+            />
             <span className="text-[var(--pw-text-muted)]">{part}</span>
           </button>
         );

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { graphemeConsonant, segmentHebrewGraphemes } from '../lib/hebrew-text';
+import { graphemeConsonant, segmentHebrewForDisplay } from '../lib/hebrew-text';
+import { useHebrewFont } from './HebrewFontContext';
 
 interface HebrewGraphemeTextProps {
   text: string;
@@ -21,7 +22,8 @@ export function HebrewGraphemeText({
   highlightClassName = 'letter-in-passage',
   consonantClassName = 'cursor-pointer hover:bg-[var(--pw-accent-gold)]/20 rounded-sm',
 }: HebrewGraphemeTextProps) {
-  const graphemes = segmentHebrewGraphemes(text);
+  const { font } = useHebrewFont();
+  const graphemes = segmentHebrewForDisplay(text, font);
 
   return (
     <span dir="rtl">
