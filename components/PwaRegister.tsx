@@ -7,6 +7,8 @@ export function PwaRegister() {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
+    let removeListeners: (() => void) | undefined;
+
     const register = async () => {
       try {
         const registration = await navigator.serviceWorker.register(pwaUrl('/sw.js'), {
@@ -17,16 +19,28 @@ export function PwaRegister() {
           registration.update().catch(() => {});
         };
 
-        checkForUpdates();
-        document.addEventListener('visibilitychange', () => {
+        const onVisible = () => {
           if (document.visibilityState === 'visible') checkForUpdates();
-        });
+        };
+
+        checkForUpdates();
+        document.addEventListener('visibilitychange', onVisible);
+        window.addEventListener('focus', checkForUpdates);
+
+        removeListeners = () => {
+          document.removeEventListener('visibilitychange', onVisible);
+          window.removeEventListener('focus', checkForUpdates);
+        };
       } catch (err) {
         console.warn('paleoMem service worker registration failed:', err);
       }
     };
 
     register();
+
+    return () => {
+      removeListeners?.();
+    };
   }, []);
 
   return null;

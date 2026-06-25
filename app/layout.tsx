@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { PwaRegister } from '../components/PwaRegister';
+import { PwaUpdatePrompt } from '../components/PwaUpdatePrompt';
 import { ReadingHelpProvider } from '../components/ReadingHelpContext';
 import { HebrewFontProvider } from '../components/HebrewFontContext';
 import { ThemeProvider } from '../components/ThemeContext';
@@ -76,6 +77,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
         <PwaRegister />
         <PwaInstallPrompt />
+        <PwaUpdatePrompt />
         <ThemeProvider>
           <HebrewFontProvider>
             <ReadingHelpProvider>
