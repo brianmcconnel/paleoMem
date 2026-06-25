@@ -3,6 +3,7 @@ const LAST_VERSE_COOKIE = 'paleomem_last_verse';
 const RTL_HELP_MINIMIZED_COOKIE = 'paleomem_rtl_help_minimized';
 const THEME_COOKIE = 'paleomem_theme';
 const HEBREW_FONT_COOKIE = 'paleomem_hebrew_font';
+const PWA_INSTALL_DISMISSED_COOKIE = 'paleomem_pwa_install_dismissed';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
 export type ThemeMode = 'dark' | 'light';
@@ -71,6 +72,15 @@ export function getHebrewFont(): HebrewFontMode {
 
 export function setHebrewFont(font: HebrewFontMode): void {
   setCookie(HEBREW_FONT_COOKIE, font);
+}
+
+/** User dismissed the install prompt — do not show again for cookie lifetime. */
+export function isPwaInstallDismissed(): boolean {
+  return getCookie(PWA_INSTALL_DISMISSED_COOKIE) === '1';
+}
+
+export function dismissPwaInstall(): void {
+  setCookie(PWA_INSTALL_DISMISSED_COOKIE, '1');
 }
 
 /** Inline script: apply saved theme and Hebrew font before first paint. */

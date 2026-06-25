@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
+import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { PwaRegister } from '../components/PwaRegister';
 import { ReadingHelpProvider } from '../components/ReadingHelpContext';
 import { HebrewFontProvider } from '../components/HebrewFontContext';
@@ -74,6 +75,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
         <PwaRegister />
+        <PwaInstallPrompt />
         <ThemeProvider>
           <HebrewFontProvider>
             <ReadingHelpProvider>
