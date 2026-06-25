@@ -9,8 +9,17 @@ export function PwaRegister() {
 
     const register = async () => {
       try {
-        await navigator.serviceWorker.register(pwaUrl('/sw.js'), {
+        const registration = await navigator.serviceWorker.register(pwaUrl('/sw.js'), {
           scope: pwaUrl('/'),
+        });
+
+        const checkForUpdates = () => {
+          registration.update().catch(() => {});
+        };
+
+        checkForUpdates();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkForUpdates();
         });
       } catch (err) {
         console.warn('paleoMem service worker registration failed:', err);

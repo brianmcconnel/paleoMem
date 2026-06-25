@@ -45,10 +45,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f9fc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b1118' },
-  ],
+  themeColor: '#0b1118',
+  colorScheme: 'dark light',
 };
 
 export default function RootLayout({
@@ -65,6 +63,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link
+          rel="preload"
+          href={pwaUrl('/fonts/Robo-PaleoHeb.ttf')}
+          as="font"
+          type="font/ttf"
+          crossOrigin="anonymous"
+        />
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">

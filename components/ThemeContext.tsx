@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { applyThemeToDocument } from '../lib/theme';
 import { getTheme, setTheme, type ThemeMode } from '../lib/site-cookies';
 
 type ThemeContextValue = {
@@ -17,10 +18,6 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggleTheme: () => {},
 });
 
-function applyTheme(theme: ThemeMode) {
-  document.documentElement.setAttribute('data-theme', theme);
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [theme, setThemeState] = useState<ThemeMode>('dark');
@@ -28,14 +25,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const saved = getTheme();
     setThemeState(saved);
-    applyTheme(saved);
+    applyThemeToDocument(saved);
     setReady(true);
   }, []);
 
   const setThemeMode = (next: ThemeMode) => {
     setTheme(next);
     setThemeState(next);
-    applyTheme(next);
+    applyThemeToDocument(next);
   };
 
   const toggleTheme = () => {

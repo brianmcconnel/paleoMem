@@ -8,9 +8,9 @@
   font-display: swap;
 }
 
-/* paleoMem — reverent dark theme (custom CSS vars) */
-:root,
-[data-theme='dark'] {
+/* paleoMem — theme tokens (html[data-theme] only — :root must not pin dark vars) */
+html[data-theme='dark'] {
+  color-scheme: dark;
   /* App surfaces */
   --pw-bg-app: #0b1118;
   --pw-bg-elevated: #111a25;
@@ -52,7 +52,8 @@
   --pw-modal: rgba(0, 0, 0, 0.7);
 }
 
-[data-theme='light'] {
+html[data-theme='light'] {
+  color-scheme: light;
   --pw-bg-app: #f7f9fc;
   --pw-bg-elevated: #ffffff;
   --pw-bg-surface: #f0f4f9;

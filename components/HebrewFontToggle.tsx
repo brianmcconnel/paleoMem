@@ -11,7 +11,7 @@ export function HebrewFontToggle() {
     <button
       type="button"
       onClick={toggleFont}
-      className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-colors scripture-hebrew text-lg leading-none ${
+      className={`flex items-center justify-center gap-1 px-2 min-w-[3.5rem] h-8 rounded-lg border transition-colors text-[10px] font-semibold uppercase tracking-wide leading-none ${
         isPaleo
           ? 'border-[var(--pw-accent-gold)] bg-[var(--pw-accent-gold)]/15 text-[var(--pw-accent-gold)]'
           : 'border-[var(--pw-border)] bg-[var(--pw-bg-surface)] text-[var(--pw-text-muted)] hover:text-[var(--pw-accent-gold)] hover:border-[var(--pw-accent-gold)]/50'
@@ -26,7 +26,10 @@ export function HebrewFontToggle() {
       }
       aria-pressed={isPaleo}
     >
-      א
+      <span className="scripture-hebrew text-sm" aria-hidden>
+        א
+      </span>
+      <span>{isPaleo ? 'Paleo' : 'Mod'}</span>
     </button>
   );
 }
