@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { HelpInterlinearExample } from './HelpInterlinearExample';
 import { HebrewRtlNote, HEBREW_RTL_LABEL } from './HebrewRtlHint';
 import { hasVisitedBefore, markVisited } from '../lib/site-cookies';
 
@@ -103,6 +104,8 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
         </ol>
       </div>
 
+      <HelpInterlinearExample />
+
       <div>
         <div className="text-xs font-semibold uppercase tracking-widest text-[var(--pw-accent-gold)] mb-2">
           The method
@@ -158,7 +161,7 @@ export function HelpGuide() {
             role="dialog"
             aria-labelledby="help-guide-title"
             aria-modal="true"
-            className="relative z-10 pointer-events-auto w-[min(100vw-2.5rem,26rem)] max-h-[min(80vh,32rem)] overflow-y-auto rounded-xl border border-[var(--pw-border)] bg-[var(--pw-bg-panel)] shadow-2xl p-5"
+            className="relative z-10 pointer-events-auto w-[min(100vw-2.5rem,28rem)] max-h-[min(85vh,36rem)] overflow-y-auto rounded-xl border border-[var(--pw-border)] bg-[var(--pw-bg-panel)] shadow-2xl p-5"
           >
             <div className="flex items-start justify-between gap-3 mb-4">
               <div>
