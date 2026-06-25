@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { dismissPwaInstall, hasVisitedBefore, isPwaInstallDismissed } from '../lib/site-cookies';
+import { pwaUrl } from '../lib/pwa';
 import {
   canShowIosInstallHint,
   isPwaInstalled,
@@ -96,9 +97,14 @@ export function PwaInstallPrompt() {
     >
       <div className="pointer-events-auto max-w-6xl mx-auto mt-3 rounded-xl border border-[var(--pw-accent-gold)]/40 bg-[var(--pw-bg-panel)] shadow-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-lg bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] flex items-center justify-center font-bold text-xl shrink-0 scripture-hebrew leading-none">
-            מ
-          </div>
+          <img
+            src={pwaUrl('/icons/icon-192.png')}
+            alt=""
+            width={40}
+            height={40}
+            className="w-10 h-10 rounded-lg shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0">
             <div id="pwa-install-title" className="font-semibold text-[var(--pw-text)]">
               Install paleoMem

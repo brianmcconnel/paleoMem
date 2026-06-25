@@ -12,11 +12,16 @@ try {
 
 const ROOT = path.join(__dirname, '..');
 const SVG_PATH = path.join(ROOT, 'app/icon.svg');
+const MASKABLE_SVG_PATH = path.join(ROOT, 'app/icon-maskable.svg');
 const OUT_DIR = path.join(ROOT, 'public/icons');
 const PALEO_ICON_SCRIPT = path.join(__dirname, 'generate-paleo-icon.py');
 
-function ensurePaleoIconSvg() {
-  if (fs.existsSync(SVG_PATH) && !process.argv.includes('--regenerate')) {
+function ensurePaleoIconSvgs() {
+  if (
+    fs.existsSync(SVG_PATH) &&
+    fs.existsSync(MASKABLE_SVG_PATH) &&
+    !process.argv.includes('--regenerate')
+  ) {
     return;
   }
 
@@ -33,37 +38,29 @@ function ensurePaleoIconSvg() {
   }
 }
 
+async function writePng(svgPath, size, outPath) {
+  await sharp(svgPath).resize(size, size).png().toFile(outPath);
+}
+
 async function main() {
-  ensurePaleoIconSvg();
+  ensurePaleoIconSvgs();
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const svg = fs.readFileSync(SVG_PATH);
-  const inner = svg
-    .toString('utf8')
-    .replace(/<\?xml[^>]*>\s*/i, '')
-    .replace(/<svg[^>]*>/, '')
-    .replace(/<\/svg>\s*$/, '');
+  const maskableSvg = fs.existsSync(MASKABLE_SVG_PATH)
+    ? MASKABLE_SVG_PATH
+    : SVG_PATH;
 
-  await sharp(svg).resize(192, 192).png().toFile(path.join(OUT_DIR, 'icon-192.png'));
-  await sharp(svg).resize(512, 512).png().toFile(path.join(OUT_DIR, 'icon-512.png'));
-
-  const maskableSvg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-      <rect width="512" height="512" fill="#c5a46e"/>
-      <svg x="80" y="80" width="352" height="352" viewBox="0 0 32 32">
-        ${inner}
-      </svg>
-    </svg>
-  `;
-
-  await sharp(Buffer.from(maskableSvg))
-    .resize(512, 512)
-    .png()
-    .toFile(path.join(OUT_DIR, 'icon-maskable-512.png'));
+  await writePng(SVG_PATH, 180, path.join(OUT_DIR, 'apple-touch-icon.png'));
+  await writePng(SVG_PATH, 192, path.join(OUT_DIR, 'icon-192.png'));
+  await writePng(SVG_PATH, 512, path.join(OUT_DIR, 'icon-512.png'));
+  await writePng(maskableSvg, 192, path.join(OUT_DIR, 'icon-maskable-192.png'));
+  await writePng(maskableSvg, 512, path.join(OUT_DIR, 'icon-maskable-512.png'));
 
   fs.copyFileSync(SVG_PATH, path.join(ROOT, 'public/icon.svg'));
+  fs.copyFileSync(path.join(OUT_DIR, 'apple-touch-icon.png'), path.join(ROOT, 'public/apple-touch-icon.png'));
+  fs.copyFileSync(path.join(OUT_DIR, 'apple-touch-icon.png'), path.join(ROOT, 'app/apple-icon.png'));
 
-  console.log('Generated Paleo-Hebrew mem PWA icons from app/icon.svg');
+  console.log('Generated Paleo-Hebrew mem PWA icons from Robo-PaleoHeb');
 }
 
 main().catch((err) => {

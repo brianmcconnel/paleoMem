@@ -41,8 +41,15 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
   },
   icons: {
-    icon: [{ url: pwaUrl('/icon.svg'), type: 'image/svg+xml' }],
-    apple: [{ url: pwaUrl('/icons/icon-192.png'), sizes: '192x192', type: 'image/png' }],
+    icon: [
+      { url: pwaUrl('/icon.svg'), type: 'image/svg+xml' },
+      { url: pwaUrl('/icons/icon-192.png'), sizes: '192x192', type: 'image/png' },
+      { url: pwaUrl('/icons/icon-512.png'), sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: pwaUrl('/apple-touch-icon.png'), sizes: '180x180', type: 'image/png' },
+      { url: pwaUrl('/icons/icon-192.png'), sizes: '192x192', type: 'image/png' },
+    ],
   },
 };
 

@@ -1,5 +1,5 @@
 /* paleoMem service worker — install + offline caching */
-const CACHE = 'paleomem-v5';
+const CACHE = 'paleomem-v6';
 const BASE = '/paleoMem';
 
 function isHtmlRequest(request) {
@@ -12,7 +12,15 @@ function isHtmlRequest(request) {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) =>
-      cache.addAll([`${BASE}/`, `${BASE}/manifest.webmanifest`]),
+      cache.addAll([
+        `${BASE}/`,
+        `${BASE}/manifest.webmanifest`,
+        `${BASE}/apple-touch-icon.png`,
+        `${BASE}/icons/icon-192.png`,
+        `${BASE}/icons/icon-512.png`,
+        `${BASE}/icons/icon-maskable-192.png`,
+        `${BASE}/icons/icon-maskable-512.png`,
+      ]),
     ),
   );
   self.skipWaiting();
