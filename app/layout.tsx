@@ -1,8 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
+import { PwaRegister } from '../components/PwaRegister';
 import { ReadingHelpProvider } from '../components/ReadingHelpContext';
 import { ThemeProvider } from '../components/ThemeContext';
+import { pwaUrl } from '../lib/pwa';
 import { THEME_BOOTSTRAP_SCRIPT } from '../lib/site-cookies';
 import './globals.css';
 
@@ -28,9 +30,24 @@ export const metadata: Metadata = {
   title: 'paleoMem',
   description:
     'Side-by-side Hebrew + English scripture with Paleo-Hebrew pictographic letter analysis',
-  icons: {
-    icon: [{ url: '/paleoMem/icon.svg', type: 'image/svg+xml' }],
+  applicationName: 'paleoMem',
+  manifest: pwaUrl('/manifest.webmanifest'),
+  appleWebApp: {
+    capable: true,
+    title: 'paleoMem',
+    statusBarStyle: 'black-translucent',
   },
+  icons: {
+    icon: [{ url: pwaUrl('/icon.svg'), type: 'image/svg+xml' }],
+    apple: [{ url: pwaUrl('/icons/icon-192.png'), sizes: '192x192', type: 'image/png' }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7f9fc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1118' },
+  ],
 };
 
 export default function RootLayout({
@@ -49,6 +66,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]">
+        <PwaRegister />
         <ThemeProvider>
           <ReadingHelpProvider>
             {children}
