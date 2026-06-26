@@ -1,8 +1,7 @@
-const {
-  getAramaicScope,
-  isWordAramaic,
-  isFullAramaicVerse,
-} = require('../lib/aramaic.ts');
+const path = require('path');
+const jiti = require('jiti')(path.join(__dirname, 'verify-aramaic.js'));
+
+const { getAramaicScope, isWordAramaic, isFullAramaicVerse } = jiti('../lib/aramaic.ts');
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
