@@ -1,3 +1,5 @@
+import { resolveHebrewSourceRef } from '../lib/kjv-hebrew-ref';
+
 /**
  * Sample scripture data for paleoMem (MVP)
  * Now includes KJV + interlinear Hebrew with Strong's numbers.
@@ -20,6 +22,8 @@ export type ScriptureVerse = {
   kjv: string;
   hebrew: string; // full pointed Hebrew for reference
   words: InterlinearWord[];
+  /** OSHB source ref when KJV numbering differs (e.g. Daniel 4). */
+  hebrewSourceRef?: string;
 };
 
 export const SAMPLE_VERSES: ScriptureVerse[] = [
@@ -135,14 +139,22 @@ export function getVerse(refOrBook: string, chapter?: number, verse?: number): S
     }
   }
 
-  // Prefer full open-source Hebrew + Strong's from OSHB
-  const hebrewVerse = hebrewLookup.get(ref);
-  if (hebrewVerse) {
-    const kjvText = getKjvText(bookName, ch, v);
-    return {
-      ...hebrewVerse,
-      kjv: kjvText || hebrewVerse.kjv || '',
-    };
+  // Prefer full open-source Hebrew + Strong's from OSHB (map KJV → WLC when needed)
+  const hebrewRef = resolveHebrewSourceRef(bookName, ch, v);
+  if (hebrewRef) {
+    const hebrewVerse = hebrewLookup.get(hebrewRef);
+    if (hebrewVerse) {
+      const kjvText = getKjvText(bookName, ch, v);
+      return {
+        ...hebrewVerse,
+        ref,
+        book: bookName,
+        chapter: ch,
+        verse: v,
+        kjv: kjvText || hebrewVerse.kjv || '',
+        hebrewSourceRef: hebrewRef !== ref ? hebrewRef : undefined,
+      };
+    }
   }
 
   // Fallback to sample data if exists

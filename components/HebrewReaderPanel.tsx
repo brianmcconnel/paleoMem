@@ -3,6 +3,7 @@
 import React from 'react';
 import type { AramaicScope } from '../lib/aramaic';
 import { AramaicBadge } from './AramaicBadge';
+import { VerseNumberingNote } from './VerseNumberingNote';
 import { InfoIcon } from './InfoIcon';
 import { HebrewRtlBadge, HebrewRtlNote } from './HebrewRtlHint';
 import { useReadingHelp } from './ReadingHelpContext';
@@ -10,9 +11,14 @@ import { useReadingHelp } from './ReadingHelpContext';
 interface HebrewReaderPanelProps {
   children: React.ReactNode;
   aramaicScope?: AramaicScope;
+  hebrewSourceRef?: string;
 }
 
-export function HebrewReaderPanel({ children, aramaicScope = 'none' }: HebrewReaderPanelProps) {
+export function HebrewReaderPanel({
+  children,
+  aramaicScope = 'none',
+  hebrewSourceRef,
+}: HebrewReaderPanelProps) {
   const { ready, minimized, toggleMinimized } = useReadingHelp();
 
   return (
@@ -46,6 +52,7 @@ export function HebrewReaderPanel({ children, aramaicScope = 'none' }: HebrewRea
         </button>
       </div>
 
+      {hebrewSourceRef && <VerseNumberingNote hebrewSourceRef={hebrewSourceRef} />}
       {aramaicScope !== 'none' && <AramaicBadge scope={aramaicScope} />}
 
       {ready && !minimized && (
