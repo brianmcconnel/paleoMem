@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { scrollToSection } from '../lib/scroll-section';
 import { HebrewFontToggle } from './HebrewFontToggle';
 import { ThemeToggle } from './ThemeToggle';
@@ -30,6 +31,12 @@ export function Header() {
         <nav className="flex items-center gap-2 sm:gap-3 text-sm shrink-0">
           <HebrewFontToggle />
           <ThemeToggle />
+          <Link
+            href="/koine"
+            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
+          >
+            koineHydata
+          </Link>
           <a
             href="#insights"
             onClick={(e) => handleNavClick(e, 'insights')}

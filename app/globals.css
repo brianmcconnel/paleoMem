@@ -41,6 +41,7 @@ html[data-theme='dark'] {
   /* Scripture specific */
   --pw-hebrew: #f1e9d9;
   --pw-aramaic: #7ec8e8;
+  --pw-greek: #b8d4f0;
   --pw-english: #cbd5e1;
   --pw-letter-bg: #1f2a3a;
   --pw-letter-border: #314556;
@@ -82,6 +83,7 @@ html[data-theme='light'] {
 
   --pw-hebrew: #1f2937;
   --pw-aramaic: #0b7285;
+  --pw-greek: #1d4ed8;
   --pw-english: #334155;
   --pw-letter-bg: #f8fafc;
   --pw-letter-border: #cbd5e1;
@@ -97,6 +99,11 @@ html[data-theme='light'] {
 
 :root {
   --font-paleo-hebrew: 'Robo PaleoHeb', var(--font-noto-hebrew), 'Noto Sans Hebrew', serif;
+  --font-koine-greek: 'Noto Sans Greek', system-ui, sans-serif;
+}
+
+.scripture-greek {
+  font-family: var(--font-koine-greek);
 }
 
 html[data-hebrew-font='paleo'] .scripture-hebrew,
@@ -137,6 +144,7 @@ html[data-theme='dark'] body {
 #insights,
 #faq,
 #datasources,
+#sources,
 #dedication {
   scroll-margin-top: calc(3rem + min(55vh, 560px) + 0.5rem);
 }
