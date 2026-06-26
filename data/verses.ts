@@ -1,4 +1,15 @@
+import { buildRef } from './books';
 import { getNumberingStatus, resolveHebrewSourceRef, type NumberingStatus } from '../lib/kjv-hebrew-ref';
+import {
+  getHebrewVerse,
+  getKjvRows,
+  getKjvText,
+  hasHebrewVerseData,
+  hasKjvVerse,
+  isHebrewDataLoaded,
+  isKjvDataLoaded,
+  getKjvMaxVerse,
+} from './scripture-index';
 
 /**
  * Sample scripture data for paleoMem (MVP)
@@ -145,7 +156,7 @@ export function getVerse(refOrBook: string, chapter?: number, verse?: number): S
   // Prefer full open-source Hebrew + Strong's from OSHB (map KJV → WLC when needed)
   const hebrewRef = resolveHebrewSourceRef(bookName, ch, v);
   if (hebrewRef) {
-    const hebrewVerse = hebrewLookup.get(hebrewRef);
+    const hebrewVerse = getHebrewVerse(hebrewRef);
     if (hebrewVerse) {
       const kjvText = getKjvText(bookName, ch, v);
       return {
@@ -187,86 +198,34 @@ export function getAvailableRefs(): string[] {
   return Array.from(verseLookup.keys());
 }
 
-// Load KJV from open source (run `npm run data:fetch`)
-let kjvData: Array<{book: string, chapter: number, verse: number, text: string}> = [];
-try {
-  // @ts-ignore
-  kjvData = require('./kjv.json');
-} catch (e) { }
-
 /** OSHB/morphhb marks morpheme boundaries with "/" — remove for display */
-export function normalizeOshbHebrew(text: string): string {
-  return text.replace(/\//g, '');
-}
+export { normalizeOshbHebrew } from './scripture-index';
 
-function normalizeHebrewVerse(v: ScriptureVerse): ScriptureVerse {
-  return {
-    ...v,
-    hebrew: normalizeOshbHebrew(v.hebrew),
-    words: v.words.map((w) => ({
-      ...w,
-      hebrew: normalizeOshbHebrew(w.hebrew),
-    })),
-  };
-}
-
-// Load full Hebrew OT + Strong's from open source OSHB/morphhb
-// (run `node scripts/fetch-hebrew-ot.js` )
-let hebrewData: ScriptureVerse[] = [];
-try {
-  // @ts-ignore
-  hebrewData = require('./ot-hebrew.json');
-} catch (e) { }
-
-const hebrewLookup = new Map<string, ScriptureVerse>();
-hebrewData.forEach((v) => hebrewLookup.set(v.ref, normalizeHebrewVerse(v)));
-
-const chapterVerseMax = new Map<string, number>();
-
-function recordMax(book: string, chapter: number, verse: number) {
-  const key = `${book}:${chapter}`;
-  const cur = chapterVerseMax.get(key) || 0;
-  if (verse > cur) chapterVerseMax.set(key, verse);
-}
-
-hebrewData.forEach(v => recordMax(v.book, v.chapter, v.verse));
-kjvData.forEach(v => recordMax(v.book, v.chapter, v.verse));
-
+/** KJV verse numbers are authoritative for navigation and the verse picker. */
 export function getMaxVerse(book: string, chapter: number): number {
-  const key = `${book}:${chapter}`;
-  return chapterVerseMax.get(key) || 50; // safe fallback
+  const kjvMax = getKjvMaxVerse(book, chapter);
+  return kjvMax > 0 ? kjvMax : 1;
 }
 
-/** Pick a random Old Testament verse that has OSHB Hebrew data. */
+/** Pick a random KJV Old Testament verse that resolves to OSHB Hebrew. */
 export function getRandomOtVerseRef(): string {
-  if (hebrewData.length === 0) {
+  const rows = getKjvRows();
+  if (rows.length === 0) {
     return DEFAULT_VERSE.ref;
   }
 
-  const pick = hebrewData[Math.floor(Math.random() * hebrewData.length)];
-  return pick.ref;
+  const withHebrew = rows.filter(
+    (row) => resolveHebrewSourceRef(row.book, row.chapter, row.verse) !== null,
+  );
+  const pool = withHebrew.length > 0 ? withHebrew : rows;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  return buildRef(pick.book, pick.chapter, pick.verse);
 }
 
-export function getKjvText(book: string, chapter: number, verse: number): string {
-  if (kjvData.length === 0) {
-    return 'KJV data not loaded. Run `npm run data:fetch` to retrieve from open source.';
-  }
-  const found = kjvData.find(v => v.book === book && v.chapter === chapter && v.verse === verse);
-  return found ? found.text : 'KJV text not available for this reference.';
-}
-
-export function isKjvDataLoaded(): boolean {
-  return kjvData.length > 0;
-}
-
-export function isHebrewDataLoaded(): boolean {
-  return hebrewData.length > 0;
-}
-
-export function hasKjvVerse(book: string, chapter: number, verse: number): boolean {
-  return kjvData.some((v) => v.book === book && v.chapter === chapter && v.verse === verse);
-}
-
-export function hasHebrewVerseData(ref: string): boolean {
-  return hebrewLookup.has(ref);
-}
+export {
+  getKjvText,
+  hasHebrewVerseData,
+  hasKjvVerse,
+  isHebrewDataLoaded,
+  isKjvDataLoaded,
+} from './scripture-index';

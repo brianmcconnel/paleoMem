@@ -38,8 +38,17 @@ export function VerseNumberingWarning({ status }: { status: NumberingStatus }) {
         <div className="min-w-0 space-y-1">
           {status.kind === 'remapped' && (
             <p className="text-[var(--pw-text-muted)]">
-              Showing <span className="font-mono text-[var(--pw-text-soft)]">{status.hebrewRef}</span>{' '}
-              for KJV <span className="font-mono text-[var(--pw-text-soft)]">{status.kjvRef}</span>.
+              KJV reference{' '}
+              <span className="font-mono text-[var(--pw-text-soft)]">{status.kjvRef}</span> — Hebrew
+              from OSHB{' '}
+              <span className="font-mono text-[var(--pw-text-soft)]">{status.hebrewRef}</span>
+            </p>
+          )}
+          {status.kind === 'kjv-only' && (
+            <p className="text-[var(--pw-text-muted)]">
+              KJV reference{' '}
+              <span className="font-mono text-[var(--pw-text-soft)]">{status.kjvRef}</span> — no OSHB
+              Hebrew at this verse
             </p>
           )}
           <p>{status.summary}</p>
