@@ -43,6 +43,13 @@ export function KoineHeader() {
             Insights
           </a>
           <a
+            href="#faq"
+            onClick={(e) => handleNavClick(e, 'faq')}
+            className="hover:text-[var(--pw-accent)] transition-colors hidden sm:inline"
+          >
+            FAQ
+          </a>
+          <a
             href="#sources"
             onClick={(e) => handleNavClick(e, 'sources')}
             className="hover:text-[var(--pw-accent)] transition-colors hidden sm:inline"

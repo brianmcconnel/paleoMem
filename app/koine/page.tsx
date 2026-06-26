@@ -13,6 +13,7 @@ import { NtVerseNavigator } from '../../components/koine/NtVerseNavigator';
 import { GreekVerseDisplay } from '../../components/koine/GreekVerseDisplay';
 import { GreekReaderPanel } from '../../components/koine/GreekReaderPanel';
 import { GreekInterlinear } from '../../components/koine/GreekInterlinear';
+import { KoineFaq } from '../../components/koine/KoineFaq';
 import { KoineSources } from '../../components/koine/KoineSources';
 import { getLastKoineVerse, setLastKoineVerse } from '../../lib/koine-cookies';
 
@@ -138,6 +139,8 @@ export default function KoineHydataPage() {
             />
           </div>
         )}
+
+        <KoineFaq />
 
         <KoineSources />
 

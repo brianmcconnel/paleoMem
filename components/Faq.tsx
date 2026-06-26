@@ -1,31 +1,13 @@
 'use client';
 
 import React from 'react';
+import { FaqItem } from './FaqItem';
 
 const GITHUB_REPO = 'https://github.com/brianmcconnel/paleoMem';
 const GITHUB_ISSUES_URL = `${GITHUB_REPO}/issues`;
 const GITHUB_NEW_ISSUE_URL = `${GITHUB_REPO}/issues/new`;
 const VERSE_MAPPING_ISSUE_URL = `${GITHUB_REPO}/issues/new?title=Verse%20mapping%20issue&body=**KJV%20reference%3A**%20%0A%0A**OSHB%20shown%20(if%20any)%3A**%20%0A%0A**What%20looks%20wrong%3F**%20%0A%0A**Expected%20behavior%3A**%20%0A`;
 const GENERAL_ISSUE_URL = `${GITHUB_REPO}/issues/new?title=Bug%20report&body=**What%20happened%3F**%20%0A%0A**Steps%20to%20reproduce%3A**%20%0A1.%20%0A2.%20%0A%0A**Expected%20behavior%3A**%20%0A%0A**Browser%20%2F%20device%3A**%20%0A%0A**Screenshot%20(optional)%3A**%20%0A`;
-
-function FaqItem({ question, children }: { question: string; children: React.ReactNode }) {
-  return (
-    <details className="group rounded-lg border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/40 open:bg-[var(--pw-bg-elevated)]/70 transition-colors">
-      <summary className="cursor-pointer list-none px-4 py-3.5 flex items-start justify-between gap-3 text-sm font-medium text-[var(--pw-text)] marker:content-none [&::-webkit-details-marker]:hidden">
-        <span>{question}</span>
-        <span
-          className="shrink-0 text-[var(--pw-text-muted)] group-open:rotate-180 transition-transform"
-          aria-hidden
-        >
-          ▾
-        </span>
-      </summary>
-      <div className="px-4 pb-4 text-sm text-[var(--pw-text-soft)] leading-relaxed space-y-3 border-t border-[var(--pw-border)]/60 pt-3">
-        {children}
-      </div>
-    </details>
-  );
-}
 
 export function Faq() {
   return (
