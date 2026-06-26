@@ -4,15 +4,17 @@ import React, { useEffect, useRef } from 'react';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
 import { getBlueLetterBibleUrl } from '../../lib/pictograph';
 import { getStrongs, getStrongsDisplay } from '../../lib/strongs';
+import { isJesusGreekWordById } from '../../lib/red-letter';
 import { GreekWordInsightCard } from './GreekWordInsightCard';
 
 interface GreekInterlinearProps {
+  verseRef: string;
   words: GreekInterlinearWord[];
   selectedId: number | null;
   onSelect: (word: GreekInterlinearWord) => void;
 }
 
-export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterlinearProps) {
+export function GreekInterlinear({ verseRef, words, selectedId, onSelect }: GreekInterlinearProps) {
   const selectedRowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
       <div className="space-y-4">
         {words.map((word) => {
           const isSelected = selectedId === word.id;
+          const isJesus = isJesusGreekWordById(verseRef, word.id);
           const strongsDisplay = getStrongsDisplay(word.strongs);
           const pronunciation =
             strongsDisplay.pronunciation || word.transliteration || '';
@@ -78,7 +81,11 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
                 aria-pressed={isSelected}
               >
                 <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1 mb-1.5">
-                  <div className="scripture-greek text-3xl text-[var(--pw-greek)] leading-none">
+                  <div
+                    className={`scripture-greek text-3xl leading-none ${
+                      isJesus ? 'scripture-jesus' : 'text-[var(--pw-greek)]'
+                    }`}
+                  >
                     {word.greek}
                   </div>
                   <span
@@ -134,7 +141,7 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
               </button>
 
               <div className="shrink-0 min-w-[200px] max-w-[320px]">
-                <GreekWordInsightCard word={word} />
+                <GreekWordInsightCard word={word} verseRef={verseRef} />
               </div>
             </div>
           );

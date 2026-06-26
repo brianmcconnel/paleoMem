@@ -111,6 +111,24 @@ export function KoineSources() {
         </div>
 
         <div>
+          <div className="font-medium text-[var(--pw-text)]">Red letter (words of Jesus)</div>
+          <div>
+            Jesus&apos;s direct speech is shown in{' '}
+            <span className="scripture-jesus font-medium">red</span> (KJV and Greek), using{' '}
+            <a
+              href="https://berean.bible/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--pw-link)] hover:underline"
+            >
+              Berean Standard Bible
+            </a>{' '}
+            USFM <span className="font-mono text-[var(--pw-text-muted)]">\wj</span> markers (public
+            domain), aligned proportionally to each verse&apos;s word list.
+          </div>
+        </div>
+
+        <div>
           <div className="font-medium text-[var(--pw-text)]">Word insights</div>
           <div>
             Curated etymology and context notes — not pictographic letter breakdowns (unlike paleoMem

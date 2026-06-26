@@ -8,6 +8,7 @@ import { GreekWordInsightCard } from './GreekWordInsightCard';
 interface GreekReaderPanelProps {
   children: React.ReactNode;
   selectedWord?: GreekInterlinearWord | null;
+  verseRef: string;
   book: string;
   chapter: number;
   verse: number;
@@ -16,6 +17,7 @@ interface GreekReaderPanelProps {
 export function GreekReaderPanel({
   children,
   selectedWord,
+  verseRef,
   book,
   chapter,
   verse,
@@ -45,7 +47,7 @@ export function GreekReaderPanel({
 
       {selectedWord && (
         <div className="mt-2">
-          <GreekWordInsightCard word={selectedWord} compact />
+          <GreekWordInsightCard word={selectedWord} verseRef={verseRef} compact />
         </div>
       )}
     </div>

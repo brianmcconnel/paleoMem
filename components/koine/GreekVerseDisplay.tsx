@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { GreekScriptureVerse } from '../../data/greek-nt';
 import { getBlueLetterBibleVerseUrl } from '../../lib/blueletterbible';
+import { getKjvJesusMask } from '../../lib/red-letter';
 
 interface GreekVerseDisplayProps {
   verse: GreekScriptureVerse;
@@ -10,6 +11,18 @@ interface GreekVerseDisplayProps {
 
 export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
   const blbUrl = getBlueLetterBibleVerseUrl(verse.book, verse.chapter, verse.verse);
+
+  const kjvParts = useMemo(() => {
+    const tokens = verse.kjv.match(/\S+|\s+/g) ?? [verse.kjv];
+    const wordMask = getKjvJesusMask(verse.ref, tokens.filter((t) => /\S/.test(t)).length);
+    let wordIndex = 0;
+
+    return tokens.map((token, index) => {
+      const isWord = /\S/.test(token);
+      const isJesus = isWord ? wordMask[wordIndex++] === true : false;
+      return { key: index, token, isJesus, isWord };
+    });
+  }, [verse.kjv, verse.ref]);
 
   return (
     <div className="card p-3">
@@ -19,7 +32,15 @@ export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
             {verse.ref} · KJV
           </div>
           <div className="scripture-english text-[1.05rem] leading-snug text-[var(--pw-english)]">
-            {verse.kjv}
+            {kjvParts.map((part) =>
+              part.isJesus ? (
+                <span key={part.key} className="scripture-jesus">
+                  {part.token}
+                </span>
+              ) : (
+                <span key={part.key}>{part.token}</span>
+              ),
+            )}
           </div>
         </div>
         <a

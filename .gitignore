@@ -23,6 +23,9 @@
 # verification output
 /reports/
 
+# data fetch cache
+/data/.cache/
+
 # misc
 .DS_Store
 *.pem

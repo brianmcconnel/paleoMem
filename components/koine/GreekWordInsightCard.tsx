@@ -3,15 +3,22 @@
 import React from 'react';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
 import { getGreekWordInsight } from '../../lib/greek-insights';
+import { isJesusGreekWordById } from '../../lib/red-letter';
 import { getBlueLetterBibleUrl } from '../../lib/pictograph';
 
 interface GreekWordInsightCardProps {
   word: GreekInterlinearWord;
+  verseRef?: string;
   compact?: boolean;
 }
 
-export function GreekWordInsightCard({ word, compact = false }: GreekWordInsightCardProps) {
+export function GreekWordInsightCard({
+  word,
+  verseRef,
+  compact = false,
+}: GreekWordInsightCardProps) {
   const insight = getGreekWordInsight(word);
+  const isJesus = verseRef ? isJesusGreekWordById(verseRef, word.id) : false;
 
   return (
     <div
@@ -20,7 +27,11 @@ export function GreekWordInsightCard({ word, compact = false }: GreekWordInsight
       }`}
     >
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 mb-1.5">
-        <span className="scripture-greek text-lg text-[var(--pw-greek)] leading-none">
+        <span
+          className={`scripture-greek text-lg leading-none ${
+            isJesus ? 'scripture-jesus' : 'text-[var(--pw-greek)]'
+          }`}
+        >
           {word.greek}
         </span>
         <a
