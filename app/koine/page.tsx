@@ -93,7 +93,12 @@ export default function KoineHydataPage() {
 
           <div>
             {hasGreekWords ? (
-              <GreekReaderPanel selectedWord={selectedWord}>
+              <GreekReaderPanel
+                selectedWord={selectedWord}
+                book={displayVerse.book}
+                chapter={displayVerse.chapter}
+                verse={displayVerse.verse}
+              >
                 {displayVerse.words.map((word, wi) => {
                   const isSelected = selectedWordId === word.id;
                   return (
