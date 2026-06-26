@@ -3,7 +3,8 @@
 import React from 'react';
 import type { AramaicScope } from '../lib/aramaic';
 import { AramaicBadge } from './AramaicBadge';
-import { VerseNumberingNote } from './VerseNumberingNote';
+import type { NumberingStatus } from '../lib/kjv-numbering';
+import { VerseNumberingWarning } from './VerseNumberingWarning';
 import { InfoIcon } from './InfoIcon';
 import { HebrewRtlBadge, HebrewRtlNote } from './HebrewRtlHint';
 import { useReadingHelp } from './ReadingHelpContext';
@@ -11,13 +12,15 @@ import { useReadingHelp } from './ReadingHelpContext';
 interface HebrewReaderPanelProps {
   children: React.ReactNode;
   aramaicScope?: AramaicScope;
-  hebrewSourceRef?: string;
+  numberingStatus?: NumberingStatus;
+  hasHebrewWords?: boolean;
 }
 
 export function HebrewReaderPanel({
   children,
   aramaicScope = 'none',
-  hebrewSourceRef,
+  numberingStatus,
+  hasHebrewWords = true,
 }: HebrewReaderPanelProps) {
   const { ready, minimized, toggleMinimized } = useReadingHelp();
 
@@ -52,7 +55,12 @@ export function HebrewReaderPanel({
         </button>
       </div>
 
-      {hebrewSourceRef && <VerseNumberingNote hebrewSourceRef={hebrewSourceRef} />}
+      {numberingStatus && <VerseNumberingWarning status={numberingStatus} />}
+      {!hasHebrewWords && numberingStatus?.kind !== 'kjv-only' && (
+        <p className="text-sm text-[var(--pw-text-muted)]">
+          No OSHB Hebrew text is available for this KJV reference.
+        </p>
+      )}
       {aramaicScope !== 'none' && <AramaicBadge scope={aramaicScope} />}
 
       {ready && !minimized && (

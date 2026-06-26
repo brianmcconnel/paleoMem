@@ -88,6 +88,39 @@ export function Faq() {
             fixes and features.
           </p>
         </FaqItem>
+
+        <FaqItem question="Why do some KJV verses show a verse-numbering warning?">
+          <p>
+            paleoMem navigates by <span className="font-medium text-[var(--pw-text-soft)]">KJV</span>{' '}
+            verse numbers (familiar from English Bibles) but loads Hebrew from the{' '}
+            <span className="font-medium text-[var(--pw-text-soft)]">OSHB</span> (Open Scriptures
+            Hebrew Bible), which follows Hebrew Bible chapter and verse breaks.
+          </p>
+          <p>
+            In a few places those systems disagree. When they do, the Hebrew reader shows a notice:
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-[var(--pw-text-muted)]">
+            <li>
+              <span className="font-medium text-[var(--pw-text-soft)]">Verse map</span> — we load
+              Hebrew from a different OSHB reference (for example, KJV Daniel 4:35 → OSHB Daniel
+              4:32).
+            </li>
+            <li>
+              <span className="font-medium text-[var(--pw-text-soft)]">KJV only</span> — the KJV
+              verse has no OSHB counterpart (for example, KJV Daniel 4:1–3).
+            </li>
+            <li>
+              <span className="font-medium text-[var(--pw-text-soft)]">Numbering</span> — the verse
+              label matches, but KJV and OSHB split the chapter differently (for example, Exodus 8 or
+              many Psalms superscriptions).
+            </li>
+          </ul>
+          <p className="text-xs text-[var(--pw-text-faint)]">
+            Mapped passages include Daniel 4, Daniel 5:31, Genesis 31:55, Joel 2:28–32, Joel 3, and
+            Malachi 4. Other known divergence chapters show a numbering notice without automatic
+            remapping.
+          </p>
+        </FaqItem>
       </div>
     </section>
   );

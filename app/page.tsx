@@ -42,6 +42,7 @@ export default function paleoMemPage() {
   const selectedRef = currentRef;
   const verseData = getVerse(selectedRef);
   const hasData = !!verseData;
+  const hasHebrewWords = (verseData?.words.length ?? 0) > 0;
   const displayVerse = verseData ?? DEFAULT_VERSE;
   const aramaicRef = displayVerse.hebrewSourceRef ?? displayVerse.ref;
   const { book: aramaicBook, chapter: aramaicChapter, verse: aramaicVerse } =
@@ -98,7 +99,8 @@ export default function paleoMemPage() {
             {hasData ? (
               <HebrewReaderPanel
                 aramaicScope={aramaicScope}
-                hebrewSourceRef={displayVerse.hebrewSourceRef}
+                numberingStatus={displayVerse.numberingStatus}
+                hasHebrewWords={hasHebrewWords}
               >
                 {displayVerse.words.map((word, wi) => {
                   const isWordSelected = selectedWordId === word.id;
@@ -138,7 +140,7 @@ export default function paleoMemPage() {
         </div>
 
         {/* Interlinear + pictograph letter cards (one row per word) */}
-        {hasData && (
+        {hasHebrewWords && (
           <div id="insights" className="mb-8 space-y-10">
             <Interlinear
               book={aramaicBook}

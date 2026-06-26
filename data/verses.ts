@@ -1,4 +1,4 @@
-import { resolveHebrewSourceRef } from '../lib/kjv-hebrew-ref';
+import { getNumberingStatus, resolveHebrewSourceRef, type NumberingStatus } from '../lib/kjv-hebrew-ref';
 
 /**
  * Sample scripture data for paleoMem (MVP)
@@ -24,6 +24,7 @@ export type ScriptureVerse = {
   words: InterlinearWord[];
   /** OSHB source ref when KJV numbering differs (e.g. Daniel 4). */
   hebrewSourceRef?: string;
+  numberingStatus?: NumberingStatus;
 };
 
 export const SAMPLE_VERSES: ScriptureVerse[] = [
@@ -139,6 +140,8 @@ export function getVerse(refOrBook: string, chapter?: number, verse?: number): S
     }
   }
 
+  const numberingStatus = getNumberingStatus(bookName, ch, v);
+
   // Prefer full open-source Hebrew + Strong's from OSHB (map KJV → WLC when needed)
   const hebrewRef = resolveHebrewSourceRef(bookName, ch, v);
   if (hebrewRef) {
@@ -153,6 +156,7 @@ export function getVerse(refOrBook: string, chapter?: number, verse?: number): S
         verse: v,
         kjv: kjvText || hebrewVerse.kjv || '',
         hebrewSourceRef: hebrewRef !== ref ? hebrewRef : undefined,
+        numberingStatus: numberingStatus.kind === 'aligned' ? undefined : numberingStatus,
       };
     }
   }
@@ -170,8 +174,9 @@ export function getVerse(refOrBook: string, chapter?: number, verse?: number): S
       chapter: ch,
       verse: v,
       kjv: kjvText,
-      hebrew: '[Hebrew + Strong\'s not yet processed for this verse]',
+      hebrew: '',
       words: [],
+      numberingStatus: numberingStatus.kind === 'aligned' ? undefined : numberingStatus,
     };
   }
 
