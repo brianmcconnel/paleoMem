@@ -1,29 +1,23 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { HelpInterlinearExample } from './HelpInterlinearExample';
 import { HebrewRtlNote, HEBREW_RTL_LABEL } from './HebrewRtlHint';
+import { InfoIcon } from './InfoIcon';
+import { KoineHelpContent } from './koine/KoineHelpContent';
 import { scrollToSection } from '../lib/scroll-section';
-import { hasVisitedBefore, markVisited } from '../lib/site-cookies';
+import {
+  hasKoineVisitedBefore,
+  hasVisitedBefore,
+  markKoineVisited,
+  markVisited,
+} from '../lib/site-cookies';
 
-function InfoIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-5 h-5"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
-  );
+type HelpVariant = 'paleo' | 'koine';
+
+function getHelpVariant(pathname: string): HelpVariant {
+  return pathname === '/koine' || pathname.startsWith('/koine/') ? 'koine' : 'paleo';
 }
 
 function scrollToDedication() {
@@ -31,12 +25,12 @@ function scrollToDedication() {
   window.history.replaceState(null, '', '#dedication');
 }
 
-function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
+function PaleoHelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
   return (
     <div className="space-y-5 text-sm leading-relaxed text-[var(--pw-text-soft)]">
       <p>
-        <span className="font-medium text-[var(--pw-text)]">paleoMem</span> is a scripture
-        study reader for the Old Testament. It places King James English beside pointed Hebrew,
+        <span className="font-medium text-[var(--pw-text)]">paleoMem</span> is a scripture study
+        reader for the Old Testament. It places King James English beside pointed Hebrew,
         Strong&apos;s numbers, and Paleo-Hebrew pictograph analysis — letter by letter.
       </p>
 
@@ -119,18 +113,64 @@ function HelpContent({ onDedicationClick }: { onDedicationClick: () => void }) {
   );
 }
 
+const HELP_META: Record<
+  HelpVariant,
+  {
+    title: string;
+    subtitle: string;
+    fabTitle: string;
+    fabOpen: string;
+    fabClosed: string;
+    fabOpenClass: string;
+    fabClosedClass: string;
+    ctaClass: string;
+  }
+> = {
+  paleo: {
+    title: 'Welcome to paleoMem',
+    subtitle: 'Quick guide to reading Hebrew with pictographs',
+    fabTitle: 'How to use paleoMem',
+    fabOpen: 'Close help guide',
+    fabClosed: 'Open help guide',
+    fabOpenClass:
+      'bg-[var(--pw-bg-panel)] border-[var(--pw-accent-gold)] text-[var(--pw-accent-gold)]',
+    fabClosedClass:
+      'bg-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] hover:bg-[var(--pw-accent-gold-hover)]',
+    ctaClass: 'btn btn-gold',
+  },
+  koine: {
+    title: 'Welcome to koineHydata',
+    subtitle: 'Quick guide to reading NT Greek with word insights',
+    fabTitle: 'How to use koineHydata',
+    fabOpen: 'Close koineHydata help',
+    fabClosed: 'Open koineHydata help',
+    fabOpenClass: 'bg-[var(--pw-bg-panel)] border-[var(--pw-accent)] text-[var(--pw-accent)]',
+    fabClosedClass:
+      'bg-[var(--pw-accent)] border-[var(--pw-accent)] text-white hover:bg-[var(--pw-accent-hover)]',
+    ctaClass: 'btn btn-primary',
+  },
+};
+
 export function HelpGuide() {
+  const pathname = usePathname();
+  const variant = getHelpVariant(pathname ?? '/');
+  const meta = HELP_META[variant];
+
   const [ready, setReady] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const visited = hasVisitedBefore();
+    const visited = variant === 'koine' ? hasKoineVisitedBefore() : hasVisitedBefore();
     setIsOpen(!visited);
     setReady(true);
-  }, []);
+  }, [variant]);
 
   const closeHelp = () => {
-    markVisited();
+    if (variant === 'koine') {
+      markKoineVisited();
+    } else {
+      markVisited();
+    }
     setIsOpen(false);
   };
 
@@ -163,11 +203,9 @@ export function HelpGuide() {
                   id="help-guide-title"
                   className="text-lg font-semibold tracking-tight text-[var(--pw-text)]"
                 >
-                  Welcome to paleoMem
+                  {meta.title}
                 </h2>
-                <p className="text-xs text-[var(--pw-text-muted)] mt-0.5">
-                  Quick guide to reading Hebrew with pictographs
-                </p>
+                <p className="text-xs text-[var(--pw-text-muted)] mt-0.5">{meta.subtitle}</p>
               </div>
               <button
                 type="button"
@@ -188,12 +226,16 @@ export function HelpGuide() {
               </button>
             </div>
 
-            <HelpContent onDedicationClick={goToDedication} />
+            {variant === 'koine' ? (
+              <KoineHelpContent />
+            ) : (
+              <PaleoHelpContent onDedicationClick={goToDedication} />
+            )}
 
             <button
               type="button"
               onClick={closeHelp}
-              className="mt-5 w-full btn btn-gold text-sm font-medium"
+              className={`mt-5 w-full text-sm font-medium ${meta.ctaClass}`}
             >
               Got it — start reading
             </button>
@@ -205,15 +247,13 @@ export function HelpGuide() {
         type="button"
         onClick={() => (isOpen ? closeHelp() : setIsOpen(true))}
         className={`pointer-events-auto relative z-20 flex items-center justify-center w-11 h-11 rounded-full border shadow-lg transition-all ${
-          isOpen
-            ? 'bg-[var(--pw-bg-panel)] border-[var(--pw-accent-gold)] text-[var(--pw-accent-gold)]'
-            : 'bg-[var(--pw-accent-gold)] border-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] hover:bg-[var(--pw-accent-gold-hover)]'
+          isOpen ? meta.fabOpenClass : meta.fabClosedClass
         }`}
-        aria-label={isOpen ? 'Close help guide' : 'Open help guide'}
+        aria-label={isOpen ? meta.fabOpen : meta.fabClosed}
         aria-expanded={isOpen}
-        title="How to use paleoMem"
+        title={meta.fabTitle}
       >
-        <InfoIcon />
+        <InfoIcon className="w-5 h-5" />
       </button>
     </div>
   );

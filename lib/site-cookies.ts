@@ -1,4 +1,5 @@
 const VISITED_COOKIE = 'paleomem_visited';
+const KOINE_VISITED_COOKIE = 'paleomem_koine_visited';
 const LAST_VERSE_COOKIE = 'paleomem_last_verse';
 const RTL_HELP_MINIMIZED_COOKIE = 'paleomem_rtl_help_minimized';
 const THEME_COOKIE = 'paleomem_theme';
@@ -37,6 +38,14 @@ export function hasVisitedBefore(): boolean {
 
 export function markVisited(): void {
   setCookie(VISITED_COOKIE, '1');
+}
+
+export function hasKoineVisitedBefore(): boolean {
+  return getCookie(KOINE_VISITED_COOKIE) != null;
+}
+
+export function markKoineVisited(): void {
+  setCookie(KOINE_VISITED_COOKIE, '1');
 }
 
 export function getLastVerse(): string | null {
