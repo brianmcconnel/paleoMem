@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   DEFAULT_KOINE_VERSE,
   getGreekVerse,
-  hasGreekInterlinear,
 } from '../../data/greek-nt';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
 import { normalizeNtReference } from '../../data/nt-books';
@@ -42,8 +41,6 @@ export default function KoineHydataPage() {
   const hasData = !!verseData;
   const hasGreekWords = (verseData?.words.length ?? 0) > 0;
   const displayVerse = verseData ?? DEFAULT_KOINE_VERSE;
-  const interlinearLoaded = hasGreekInterlinear(currentRef);
-
   const selectedWord = useMemo(
     () => displayVerse.words.find((w) => w.id === selectedWordId) ?? null,
     [displayVerse.words, selectedWordId],
@@ -120,7 +117,7 @@ export default function KoineHydataPage() {
             ) : (
               <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)] text-sm">
                 {hasData
-                  ? `Greek interlinear for ${currentRef} is not loaded yet — KJV English is shown above.`
+                  ? `No Greek interlinear available for ${currentRef} — KJV English is shown above.`
                   : `Greek for ${currentRef} not found.`}
               </div>
             )}
@@ -135,13 +132,6 @@ export default function KoineHydataPage() {
               onSelect={handleSelectWord}
             />
           </div>
-        )}
-
-        {!interlinearLoaded && hasData && (
-          <p className="text-xs text-[var(--pw-text-faint)] mb-8 -mt-4">
-            Navigate the full New Testament; Greek interlinear is seeded for loaded verses (starting
-            with John 1:1).
-          </p>
         )}
 
         <KoineSources />
