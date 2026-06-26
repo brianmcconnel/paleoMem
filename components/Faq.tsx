@@ -2,8 +2,11 @@
 
 import React from 'react';
 
-const VERSE_MAPPING_ISSUE_URL =
-  'https://github.com/brianmcconnel/paleoMem/issues/new?title=Verse%20mapping%20issue&body=**KJV%20reference%3A**%20%0A%0A**OSHB%20shown%20(if%20any)%3A**%20%0A%0A**What%20looks%20wrong%3F**%20%0A%0A**Expected%20behavior%3A**%20%0A';
+const GITHUB_REPO = 'https://github.com/brianmcconnel/paleoMem';
+const GITHUB_ISSUES_URL = `${GITHUB_REPO}/issues`;
+const GITHUB_NEW_ISSUE_URL = `${GITHUB_REPO}/issues/new`;
+const VERSE_MAPPING_ISSUE_URL = `${GITHUB_REPO}/issues/new?title=Verse%20mapping%20issue&body=**KJV%20reference%3A**%20%0A%0A**OSHB%20shown%20(if%20any)%3A**%20%0A%0A**What%20looks%20wrong%3F**%20%0A%0A**Expected%20behavior%3A**%20%0A`;
+const GENERAL_ISSUE_URL = `${GITHUB_REPO}/issues/new?title=Bug%20report&body=**What%20happened%3F**%20%0A%0A**Steps%20to%20reproduce%3A**%20%0A1.%20%0A2.%20%0A%0A**Expected%20behavior%3A**%20%0A%0A**Browser%20%2F%20device%3A**%20%0A%0A**Screenshot%20(optional)%3A**%20%0A`;
 
 function FaqItem({ question, children }: { question: string; children: React.ReactNode }) {
   return (
@@ -124,16 +127,85 @@ export function Faq() {
             psalm superscriptions, and passages like Daniel 4, Joel 2–3, and Malachi 4.
           </p>
           <p>
-            See a mapping that looks wrong?{' '}
+            See a mapping that looks wrong? Use the{' '}
             <a
               href={VERSE_MAPPING_ISSUE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--pw-link)] hover:underline"
             >
-              Report a verse mapping problem on GitHub
+              verse mapping report form
+            </a>{' '}
+            (described in <span className="font-medium text-[var(--pw-text-soft)]">How do I report a problem?</span>{' '}
+            below).
+          </p>
+        </FaqItem>
+
+        <FaqItem question="How do I report a problem?">
+          <p>
+            The best way to report a bug or request a fix is on{' '}
+            <a
+              href={GITHUB_ISSUES_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--pw-link)] hover:underline"
+            >
+              GitHub Issues
+            </a>{' '}
+            for the paleoMem project. You will need a free GitHub account to open an issue.
+          </p>
+
+          <div>
+            <div className="font-medium text-[var(--pw-text)] mb-1.5">Verse mapping problems</div>
+            <p className="text-[var(--pw-text-muted)]">
+              If KJV and OSHB references do not line up, or Hebrew is missing when you expect it, use
+              the{' '}
+              <a
+                href={VERSE_MAPPING_ISSUE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--pw-link)] hover:underline"
+              >
+                verse mapping report form
+              </a>
+              . It opens a pre-filled issue — add the KJV reference, the OSHB reference shown in the
+              reader (if any), and what you expected to see.
+            </p>
+          </div>
+
+          <div>
+            <div className="font-medium text-[var(--pw-text)] mb-1.5">Other bugs (display, PWA, Hebrew, interlinear)</div>
+            <p className="text-[var(--pw-text-muted)]">
+              For anything else,{' '}
+              <a
+                href={GENERAL_ISSUE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--pw-link)] hover:underline"
+              >
+                open a general bug report
+              </a>
+              . Helpful details include:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-[var(--pw-text-muted)] mt-1.5">
+              <li>What you were doing (verse reference, which panel, phone or desktop)</li>
+              <li>What happened vs. what you expected</li>
+              <li>Browser and device (for example, Safari on iPhone, Chrome on Android)</li>
+              <li>A screenshot, if you can attach one on GitHub</li>
+            </ul>
+          </div>
+
+          <p className="text-xs text-[var(--pw-text-faint)]">
+            You can also browse existing issues or open a blank report from the{' '}
+            <a
+              href={GITHUB_NEW_ISSUE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--pw-link)] hover:underline"
+            >
+              new issue page
             </a>
-            . Include the KJV reference, what OSHB reference was shown (if any), and what you expected.
+            .
           </p>
         </FaqItem>
       </div>
