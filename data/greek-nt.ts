@@ -105,3 +105,11 @@ export function hasGreekInterlinear(ref: string): boolean {
 export function isGreekNtDataLoaded(): boolean {
   return greekNtData.length > 0;
 }
+
+export function hasGreekVerseData(ref: string): boolean {
+  return greekVerseLookup.has(ref.trim());
+}
+
+export function getGreekNtVerseCount(): number {
+  return greekNtData.length;
+}

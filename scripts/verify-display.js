@@ -4,7 +4,7 @@ const path = require('path');
 const jiti = require('jiti')(path.join(__dirname, 'verify-display.js'));
 
 const {
-  auditAllVerseDisplays,
+  auditDisplayVerification,
   formatDisplayVerificationReport,
 } = jiti('../lib/display-verification.ts');
 
@@ -12,7 +12,7 @@ const args = process.argv.slice(2);
 const writeJson = args.includes('--json') || args.includes('--write-report');
 const failOnUnexpected = !args.includes('--allow-expected');
 
-const report = auditAllVerseDisplays();
+const report = auditDisplayVerification();
 const formatted = formatDisplayVerificationReport(report);
 
 console.log(formatted);
@@ -25,8 +25,13 @@ if (writeJson) {
   console.log(`\nWrote ${outPath}`);
 }
 
+const ot = report.oldTestament.totals;
+const nt = report.newTestament.totals;
 const hasUnexpected =
-  report.totals.unexpectedEnglishIssues > 0 || report.totals.unexpectedHebrewIssues > 0;
+  ot.unexpectedEnglishIssues > 0 ||
+  ot.unexpectedSecondaryIssues > 0 ||
+  nt.unexpectedEnglishIssues > 0 ||
+  nt.unexpectedSecondaryIssues > 0;
 
 if (failOnUnexpected && hasUnexpected) {
   process.exit(1);
