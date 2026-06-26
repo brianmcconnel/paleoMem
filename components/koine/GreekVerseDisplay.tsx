@@ -14,7 +14,7 @@ export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
 
   const kjvParts = useMemo(() => {
     const tokens = verse.kjv.match(/\S+|\s+/g) ?? [verse.kjv];
-    const wordMask = getKjvJesusMask(verse.ref, tokens.filter((t) => /\S/.test(t)).length);
+    const wordMask = getKjvJesusMask(verse);
     let wordIndex = 0;
 
     return tokens.map((token, index) => {
@@ -22,7 +22,7 @@ export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
       const isJesus = isWord ? wordMask[wordIndex++] === true : false;
       return { key: index, token, isJesus, isWord };
     });
-  }, [verse.kjv, verse.ref]);
+  }, [verse]);
 
   return (
     <div className="card p-3">
@@ -34,7 +34,7 @@ export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
           <div className="scripture-english text-[1.05rem] leading-snug text-[var(--pw-english)]">
             {kjvParts.map((part) =>
               part.isJesus ? (
-                <span key={part.key} className="scripture-jesus">
+                <span key={part.key} className="text-[var(--pw-jesus)] font-medium">
                   {part.token}
                 </span>
               ) : (

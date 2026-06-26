@@ -8,7 +8,6 @@ import { GreekWordInsightCard } from './GreekWordInsightCard';
 interface GreekReaderPanelProps {
   children: React.ReactNode;
   selectedWord?: GreekInterlinearWord | null;
-  verseRef: string;
   book: string;
   chapter: number;
   verse: number;
@@ -17,7 +16,6 @@ interface GreekReaderPanelProps {
 export function GreekReaderPanel({
   children,
   selectedWord,
-  verseRef,
   book,
   chapter,
   verse,
@@ -28,7 +26,7 @@ export function GreekReaderPanel({
     <div className="card p-3">
       <div className="flex items-start justify-between gap-3">
         <div
-          className="scripture-greek text-[var(--pw-greek)] text-xl leading-relaxed flex-1 min-w-0"
+          className="scripture-greek text-xl leading-relaxed flex-1 min-w-0"
           dir="ltr"
           title="Greek — read left to right; click a word for its insight"
         >
@@ -47,7 +45,7 @@ export function GreekReaderPanel({
 
       {selectedWord && (
         <div className="mt-2">
-          <GreekWordInsightCard word={selectedWord} verseRef={verseRef} compact />
+          <GreekWordInsightCard word={selectedWord} compact />
         </div>
       )}
     </div>

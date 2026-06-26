@@ -114,7 +114,7 @@ export function KoineSources() {
           <div className="font-medium text-[var(--pw-text)]">Red letter (words of Jesus)</div>
           <div>
             Jesus&apos;s direct speech is shown in{' '}
-            <span className="scripture-jesus font-medium">red</span> (KJV and Greek), using{' '}
+            <span className="text-[var(--pw-jesus)] font-medium">red</span> (KJV and Greek), using{' '}
             <a
               href="https://berean.bible/"
               target="_blank"

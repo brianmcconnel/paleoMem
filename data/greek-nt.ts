@@ -12,6 +12,8 @@ export type GreekInterlinearWord = {
   strongs: string;
   transliteration?: string;
   gloss: string;
+  /** Words of Jesus (from BSB USFM red-letter); set by scripts/fetch-red-letter.js */
+  jesus?: boolean;
 };
 
 export type GreekScriptureVerse = {
@@ -23,6 +25,8 @@ export type GreekScriptureVerse = {
   greek: string;
   words: GreekInterlinearWord[];
   source: string;
+  /** Per KJV token — parallel to whitespace-split words in verse.kjv */
+  kjvJesusMask?: boolean[];
 };
 
 export const GREEK_NT_SOURCE_ATTRIBUTION =

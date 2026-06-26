@@ -16,7 +16,7 @@ import { GreekInterlinear } from '../../components/koine/GreekInterlinear';
 import { KoineFaq } from '../../components/koine/KoineFaq';
 import { KoineSources } from '../../components/koine/KoineSources';
 import { getLastKoineVerse, setLastKoineVerse } from '../../lib/koine-cookies';
-import { isJesusGreekWordById } from '../../lib/red-letter';
+import { isJesusGreekWord } from '../../lib/red-letter';
 
 export default function KoineHydataPage() {
   const [currentRef, setCurrentRef] = useState<string>(DEFAULT_KOINE_VERSE.ref);
@@ -97,21 +97,22 @@ export default function KoineHydataPage() {
             {hasGreekWords ? (
               <GreekReaderPanel
                 selectedWord={selectedWord}
-                verseRef={displayVerse.ref}
                 book={displayVerse.book}
                 chapter={displayVerse.chapter}
                 verse={displayVerse.verse}
               >
                 {displayVerse.words.map((word, wi) => {
                   const isSelected = selectedWordId === word.id;
-                  const isJesus = isJesusGreekWordById(displayVerse.ref, word.id);
+                  const isJesus = isJesusGreekWord(word);
                   return (
                     <span key={word.id}>
                       <button
                         type="button"
                         onClick={() => handleSelectWord(word)}
                         className={`inline scripture-greek bg-transparent border-0 p-0 cursor-pointer rounded-sm ${
-                          isJesus ? 'scripture-jesus' : 'text-inherit'
+                          isJesus
+                            ? 'text-[var(--pw-jesus)]'
+                            : 'text-[var(--pw-greek)]'
                         } ${
                           isSelected
                             ? 'word-in-passage bg-[var(--pw-accent)]/25 ring-1 ring-[var(--pw-accent)]/50'
@@ -138,7 +139,6 @@ export default function KoineHydataPage() {
         {hasGreekWords && (
           <div id="insights" className="mb-8">
             <GreekInterlinear
-              verseRef={displayVerse.ref}
               words={displayVerse.words}
               selectedId={selectedWordId}
               onSelect={handleSelectWord}

@@ -42,7 +42,7 @@ html[data-theme='dark'] {
   --pw-hebrew: #f1e9d9;
   --pw-aramaic: #7ec8e8;
   --pw-greek: #b8d4f0;
-  --pw-jesus: #f07178;
+  --pw-jesus: #ff6b6b;
   --pw-english: #cbd5e1;
   --pw-letter-bg: #1f2a3a;
   --pw-letter-border: #314556;
@@ -85,7 +85,7 @@ html[data-theme='light'] {
   --pw-hebrew: #1f2937;
   --pw-aramaic: #0b7285;
   --pw-greek: #1d4ed8;
-  --pw-jesus: #b91c1c;
+  --pw-jesus: #c41e1e;
   --pw-english: #334155;
   --pw-letter-bg: #f8fafc;
   --pw-letter-border: #cbd5e1;

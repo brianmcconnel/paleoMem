@@ -239,6 +239,30 @@ async function main() {
 
   fs.writeFileSync(OUTPUT, JSON.stringify(output));
 
+  if (fs.existsSync(GREEK_PATH)) {
+    const greek = JSON.parse(fs.readFileSync(GREEK_PATH, 'utf8'));
+    let patchedVerses = 0;
+
+    for (const verse of greek) {
+      const rl = output[verse.ref];
+      if (!rl) {
+        delete verse.kjvJesusMask;
+        for (const word of verse.words) delete word.jesus;
+        continue;
+      }
+
+      verse.kjvJesusMask = rl.kjvMask;
+      verse.words.forEach((word, index) => {
+        if (rl.greekMask[index]) word.jesus = true;
+        else delete word.jesus;
+      });
+      patchedVerses += 1;
+    }
+
+    fs.writeFileSync(GREEK_PATH, JSON.stringify(greek, null, 0));
+    console.log(`  Patched ${GREEK_PATH} — ${patchedVerses} verses with jesus flags on words`);
+  }
+
   fs.writeFileSync(
     ATTRIBUTION,
     `koineHydata red-letter (words of Jesus) data source
