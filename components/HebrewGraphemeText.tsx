@@ -7,6 +7,8 @@ import { useHebrewFont } from './HebrewFontContext';
 interface HebrewGraphemeTextProps {
   text: string;
   selectedLetter?: string | null;
+  /** Biblical Aramaic words use a distinct open serif face in modern script mode. */
+  script?: 'hebrew' | 'aramaic';
   /** When false, consonants are not clickable and selected letter is not highlighted. */
   interactive?: boolean;
   onConsonantClick?: (consonant: string) => void;
@@ -17,6 +19,7 @@ interface HebrewGraphemeTextProps {
 export function HebrewGraphemeText({
   text,
   selectedLetter = null,
+  script = 'hebrew',
   interactive = true,
   onConsonantClick,
   highlightClassName = 'letter-in-passage',
@@ -26,7 +29,7 @@ export function HebrewGraphemeText({
   const graphemes = segmentHebrewForDisplay(text, font);
 
   return (
-    <span dir="rtl">
+    <span dir="rtl" className={script === 'aramaic' ? 'scripture-aramaic' : undefined}>
       {graphemes.map((grapheme, idx) => {
         const consonant = graphemeConsonant(grapheme);
         const isHighlighted = interactive && !!selectedLetter && consonant === selectedLetter;

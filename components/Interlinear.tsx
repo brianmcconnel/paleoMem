@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
+import { isWordAramaic } from '../lib/aramaic';
 import { HebrewGraphemeText } from './HebrewGraphemeText';
 import {
   getStrongs,
@@ -13,6 +14,9 @@ import { HebrewRtlNote } from './HebrewRtlHint';
 import { LetterCard } from './LetterCard';
 
 interface InterlinearProps {
+  book: string;
+  chapter: number;
+  verse: number;
   words: InterlinearWord[];
   selectedId: number | null;
   selectedLetter: string | null;
@@ -21,6 +25,9 @@ interface InterlinearProps {
 }
 
 export function Interlinear({
+  book,
+  chapter,
+  verse,
   words,
   selectedId,
   selectedLetter,
@@ -42,6 +49,9 @@ export function Interlinear({
   ) => (
     <HebrewGraphemeText
       text={hebrew}
+      script={
+        isWordAramaic(book, chapter, verse, word.id, word.strongs) ? 'aramaic' : 'hebrew'
+      }
       selectedLetter={selectedLetter}
       interactive={isActiveWord && !!selectedLetter}
       highlightClassName="letter-in-passage bg-[var(--pw-accent-gold)] text-[var(--pw-on-gold)] px-0.5 rounded-sm"

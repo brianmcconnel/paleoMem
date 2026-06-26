@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Noto_Sans_Hebrew } from 'next/font/google';
+import { Geist, Geist_Mono, Noto_Sans_Hebrew, Noto_Serif_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { PwaRegister } from '../components/PwaRegister';
@@ -25,6 +25,12 @@ const geistMono = Geist_Mono({
 
 const notoHebrew = Noto_Sans_Hebrew({
   variable: '--font-noto-hebrew',
+  subsets: ['hebrew', 'latin'],
+  weight: ['400', '500', '700'],
+});
+
+const notoHebrewSerif = Noto_Serif_Hebrew({
+  variable: '--font-noto-hebrew-serif',
   subsets: ['hebrew', 'latin'],
   weight: ['400', '500', '700'],
 });
@@ -66,7 +72,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoHebrew.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoHebrew.variable} ${notoHebrewSerif.variable} h-full antialiased`}
       data-theme="dark"
       data-hebrew-font="modern"
       suppressHydrationWarning

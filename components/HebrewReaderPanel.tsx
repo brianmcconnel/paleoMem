@@ -1,15 +1,18 @@
 'use client';
 
 import React from 'react';
+import type { AramaicScope } from '../lib/aramaic';
+import { AramaicBadge } from './AramaicBadge';
 import { InfoIcon } from './InfoIcon';
 import { HebrewRtlBadge, HebrewRtlNote } from './HebrewRtlHint';
 import { useReadingHelp } from './ReadingHelpContext';
 
 interface HebrewReaderPanelProps {
   children: React.ReactNode;
+  aramaicScope?: AramaicScope;
 }
 
-export function HebrewReaderPanel({ children }: HebrewReaderPanelProps) {
+export function HebrewReaderPanel({ children, aramaicScope = 'none' }: HebrewReaderPanelProps) {
   const { ready, minimized, toggleMinimized } = useReadingHelp();
 
   return (
@@ -42,6 +45,8 @@ export function HebrewReaderPanel({ children }: HebrewReaderPanelProps) {
           <InfoIcon />
         </button>
       </div>
+
+      {aramaicScope !== 'none' && <AramaicBadge scope={aramaicScope} />}
 
       {ready && !minimized && (
         <div className="mt-2 space-y-2">

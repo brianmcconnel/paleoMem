@@ -104,6 +104,11 @@ html[data-hebrew-font='paleo'] .hebrew {
   letter-spacing: 0.04em;
 }
 
+/* Biblical Aramaic (square script) — open Noto Serif Hebrew in modern mode */
+html[data-hebrew-font='modern'] .scripture-aramaic {
+  font-family: var(--font-noto-hebrew-serif), 'Noto Serif Hebrew', var(--font-noto-hebrew), serif;
+}
+
 html {
   scroll-padding-top: 3rem;
   min-height: 100%;

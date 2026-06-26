@@ -11,6 +11,7 @@ import { Faq } from '../components/Faq';
 import { HebrewReaderPanel } from '../components/HebrewReaderPanel';
 import { normalizeReference } from '../data/books';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
+import { getAramaicScope, isWordAramaic } from '../lib/aramaic';
 import { getLastVerse, setLastVerse } from '../lib/site-cookies';
 import { HebrewGraphemeText } from '../components/HebrewGraphemeText';
 import { useHebrewFont } from '../components/HebrewFontContext';
@@ -42,6 +43,7 @@ export default function paleoMemPage() {
   const verseData = getVerse(selectedRef);
   const hasData = !!verseData;
   const displayVerse = verseData ?? DEFAULT_VERSE;
+  const aramaicScope = getAramaicScope(displayVerse.book, displayVerse.chapter, displayVerse.verse);
 
   // Note: selection state is derived from currentRef + displayVerse in computations below.
   // No explicit reset effect to avoid setState-in-effect lint rule.
@@ -91,9 +93,16 @@ export default function paleoMemPage() {
 
           <div>
             {hasData ? (
-              <HebrewReaderPanel>
+              <HebrewReaderPanel aramaicScope={aramaicScope}>
                 {displayVerse.words.map((word, wi) => {
                   const isWordSelected = selectedWordId === word.id;
+                  const isAramaic = isWordAramaic(
+                    displayVerse.book,
+                    displayVerse.chapter,
+                    displayVerse.verse,
+                    word.id,
+                    word.strongs,
+                  );
                   return (
                     <span
                       key={wi}
@@ -101,6 +110,7 @@ export default function paleoMemPage() {
                     >
                       <HebrewGraphemeText
                         text={word.hebrew}
+                        script={isAramaic ? 'aramaic' : 'hebrew'}
                         selectedLetter={selectedLetter}
                         onConsonantClick={(consonant) => {
                           setSelectedWordId(word.id);
@@ -125,6 +135,9 @@ export default function paleoMemPage() {
         {hasData && (
           <div id="insights" className="mb-8 space-y-10">
             <Interlinear
+              book={displayVerse.book}
+              chapter={displayVerse.chapter}
+              verse={displayVerse.verse}
               words={displayVerse.words}
               selectedId={selectedWordId}
               selectedLetter={selectedLetter}
