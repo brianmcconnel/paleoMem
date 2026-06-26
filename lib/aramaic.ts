@@ -112,7 +112,7 @@ export function getAramaicScopeHint(scope: AramaicScope): string | null {
     case 'full':
       return 'This passage is written in Biblical Aramaic (square script). Strong’s numbers and pictographs still apply.';
     case 'partial':
-      return 'Aramaic words in this verse are marked in a distinct typeface.';
+      return 'Aramaic words are shown in teal with a distinct typeface.';
     default:
       return null;
   }

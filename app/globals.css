@@ -40,6 +40,7 @@ html[data-theme='dark'] {
 
   /* Scripture specific */
   --pw-hebrew: #f1e9d9;
+  --pw-aramaic: #9cc9db;
   --pw-english: #cbd5e1;
   --pw-letter-bg: #1f2a3a;
   --pw-letter-border: #314556;
@@ -80,6 +81,7 @@ html[data-theme='light'] {
   --pw-link: #2563eb;
 
   --pw-hebrew: #1f2937;
+  --pw-aramaic: #1e5f6e;
   --pw-english: #334155;
   --pw-letter-bg: #f8fafc;
   --pw-letter-border: #cbd5e1;
@@ -104,7 +106,11 @@ html[data-hebrew-font='paleo'] .hebrew {
   letter-spacing: 0.04em;
 }
 
-/* Biblical Aramaic (square script) — open Noto Serif Hebrew in modern mode */
+/* Biblical Aramaic — cool teal tint vs warm Hebrew cream */
+.scripture-aramaic {
+  color: var(--pw-aramaic);
+}
+
 html[data-hebrew-font='modern'] .scripture-aramaic {
   font-family: var(--font-noto-hebrew-serif), 'Noto Serif Hebrew', var(--font-noto-hebrew), serif;
 }
