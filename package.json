@@ -15,6 +15,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "validate": "npm run typecheck && npm run lint && npm run format:check",
+    "verify:display": "node scripts/verify-display.js --write-report",
     "data:fetch": "node scripts/fetch-bible-data.js && node scripts/fetch-hebrew-ot.js && node scripts/convert-strongs.js"
   },
   "dependencies": {

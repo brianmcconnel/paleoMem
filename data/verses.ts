@@ -254,3 +254,19 @@ export function getKjvText(book: string, chapter: number, verse: number): string
   const found = kjvData.find(v => v.book === book && v.chapter === chapter && v.verse === verse);
   return found ? found.text : 'KJV text not available for this reference.';
 }
+
+export function isKjvDataLoaded(): boolean {
+  return kjvData.length > 0;
+}
+
+export function isHebrewDataLoaded(): boolean {
+  return hebrewData.length > 0;
+}
+
+export function hasKjvVerse(book: string, chapter: number, verse: number): boolean {
+  return kjvData.some((v) => v.book === book && v.chapter === chapter && v.verse === verse);
+}
+
+export function hasHebrewVerseData(ref: string): boolean {
+  return hebrewLookup.has(ref);
+}
