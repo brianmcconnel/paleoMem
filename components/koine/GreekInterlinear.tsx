@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
 import { getBlueLetterBibleUrl } from '../../lib/pictograph';
 import { getStrongs, getStrongsDisplay } from '../../lib/strongs';
-import { getGreekWordInsight } from '../../lib/greek-insights';
+import { GreekWordInsightCard } from './GreekWordInsightCard';
 
 interface GreekInterlinearProps {
   words: GreekInterlinearWord[];
@@ -13,6 +13,31 @@ interface GreekInterlinearProps {
 }
 
 export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterlinearProps) {
+  const selectedRowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    const rowEl = selectedRowRef.current;
+    const readerEl = document.getElementById('reader');
+    if (!rowEl || !readerEl) return;
+
+    const scrollToRow = () => {
+      rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+
+      const readerBottom = readerEl.getBoundingClientRect().bottom;
+      const rowTop = rowEl.getBoundingClientRect().top;
+      const gap = 12;
+      const delta = rowTop - readerBottom - gap;
+
+      if (Math.abs(delta) > 4) {
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+      }
+    };
+
+    requestAnimationFrame(scrollToRow);
+  }, [selectedId]);
+
   if (!words.length) return null;
 
   return (
@@ -22,8 +47,8 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
           Interlinear Greek + Strong&apos;s + Word insights
         </div>
         <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
-          Each row: Strong&apos;s word card, then etymology / symbolism (not letter pictographs).
-          Greek reads left to right.
+          Click a Greek word in the reader to see its insight above and here. Greek reads left to
+          right.
         </div>
       </div>
 
@@ -31,13 +56,13 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
         {words.map((word) => {
           const isSelected = selectedId === word.id;
           const strongsDisplay = getStrongsDisplay(word.strongs);
-          const insight = getGreekWordInsight(word);
           const pronunciation =
             strongsDisplay.pronunciation || word.transliteration || '';
 
           return (
             <div
               key={word.id}
+              ref={isSelected ? selectedRowRef : undefined}
               className={`flex flex-nowrap items-stretch gap-3 overflow-x-auto pb-1 rounded-xl p-2 -mx-2 ${
                 isSelected ? 'bg-[var(--pw-bg-panel)]/40' : ''
               }`}
@@ -108,32 +133,8 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
                 )}
               </button>
 
-              <div
-                className={`shrink-0 rounded-xl border p-3 min-w-[200px] max-w-[320px] card ${
-                  isSelected
-                    ? 'border-[var(--pw-accent-gold)]/60 bg-[var(--pw-bg-elevated)]/80'
-                    : 'border-[var(--pw-border)]'
-                }`}
-              >
-                <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
-                  Word insight
-                </div>
-                <div className="text-sm font-medium text-[var(--pw-text-soft)] leading-snug">
-                  {insight.title}
-                </div>
-                <p className="text-xs text-[var(--pw-text-muted)] mt-2 leading-relaxed">
-                  {insight.etymology}
-                </p>
-                {insight.symbolism && (
-                  <p className="text-xs text-[var(--pw-meaning)] mt-2 leading-relaxed border-t border-[var(--pw-border)] pt-2">
-                    {insight.symbolism}
-                  </p>
-                )}
-                {insight.devotional && (
-                  <p className="text-xs text-[var(--pw-text-faint)] mt-2 italic leading-relaxed">
-                    {insight.devotional}
-                  </p>
-                )}
+              <div className="shrink-0 min-w-[200px] max-w-[320px]">
+                <GreekWordInsightCard word={word} />
               </div>
             </div>
           );

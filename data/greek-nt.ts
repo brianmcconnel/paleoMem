@@ -3,6 +3,10 @@
  * MVP: John 1:1 — expand via scripts/fetch-sblgnt.js
  */
 
+import { parseRef } from './books';
+import { getNtBook } from './nt-books';
+import { getKjvRows } from './scripture-index';
+
 export type GreekInterlinearWord = {
   id: number;
   greek: string;
@@ -55,12 +59,49 @@ export const JOHN_1_1: GreekScriptureVerse = {
 
 export const DEFAULT_KOINE_VERSE = JOHN_1_1;
 
-const verseLookup = new Map<string, GreekScriptureVerse>([[JOHN_1_1.ref, JOHN_1_1]]);
+const greekVerseLookup = new Map<string, GreekScriptureVerse>([[JOHN_1_1.ref, JOHN_1_1]]);
 
+function getNtKjvText(book: string, chapter: number, verse: number): string {
+  const ntBook = getNtBook(book);
+  if (!ntBook) return '';
+  const row = getKjvRows().find(
+    (v) => v.book === ntBook.kjvKey && v.chapter === chapter && v.verse === verse,
+  );
+  return row?.text ?? '';
+}
+
+/** Load interlinear Greek when seeded; otherwise KJV-only shell for navigation. */
 export function getGreekVerse(ref: string): GreekScriptureVerse | undefined {
-  return verseLookup.get(ref.trim());
+  const trimmed = ref.trim();
+  const loaded = greekVerseLookup.get(trimmed);
+  if (loaded) return loaded;
+
+  const { book, chapter, verse } = parseRef(trimmed);
+  const kjv = getNtKjvText(book, chapter, verse);
+  if (!kjv) return undefined;
+
+  return {
+    ref: trimmed,
+    book,
+    chapter,
+    verse,
+    kjv,
+    greek: '',
+    words: [],
+    source: 'KJV (Greek interlinear not yet loaded for this verse)',
+  };
 }
 
 export function getAvailableGreekRefs(): string[] {
-  return Array.from(verseLookup.keys());
+  return Array.from(greekVerseLookup.keys());
+}
+
+export function getRandomKoineVerseRef(): string {
+  const refs = getAvailableGreekRefs();
+  if (refs.length === 0) return DEFAULT_KOINE_VERSE.ref;
+  return refs[Math.floor(Math.random() * refs.length)];
+}
+
+export function hasGreekInterlinear(ref: string): boolean {
+  return greekVerseLookup.has(ref.trim());
 }

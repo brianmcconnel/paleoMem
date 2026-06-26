@@ -1,21 +1,61 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { DEFAULT_KOINE_VERSE } from '../../data/greek-nt';
+import {
+  DEFAULT_KOINE_VERSE,
+  getGreekVerse,
+  hasGreekInterlinear,
+} from '../../data/greek-nt';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
+import { normalizeNtReference } from '../../data/nt-books';
 import { KoineHeader } from '../../components/koine/KoineHeader';
+import { NtVerseNavigator } from '../../components/koine/NtVerseNavigator';
 import { GreekVerseDisplay } from '../../components/koine/GreekVerseDisplay';
 import { GreekReaderPanel } from '../../components/koine/GreekReaderPanel';
 import { GreekInterlinear } from '../../components/koine/GreekInterlinear';
 import { KoineSources } from '../../components/koine/KoineSources';
+import { getLastKoineVerse, setLastKoineVerse } from '../../lib/koine-cookies';
 
 export default function KoineHydataPage() {
-  const verse = DEFAULT_KOINE_VERSE;
+  const [currentRef, setCurrentRef] = useState<string>(DEFAULT_KOINE_VERSE.ref);
+  const [verseReady, setVerseReady] = useState(false);
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
 
+  useEffect(() => {
+    const saved = getLastKoineVerse();
+    if (saved) {
+      const normalized = normalizeNtReference(saved);
+      if (getGreekVerse(normalized)) {
+        setCurrentRef(normalized);
+      }
+    }
+    setVerseReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!verseReady) return;
+    setLastKoineVerse(currentRef);
+  }, [currentRef, verseReady]);
+
+  const verseData = getGreekVerse(currentRef);
+  const hasData = !!verseData;
+  const hasGreekWords = (verseData?.words.length ?? 0) > 0;
+  const displayVerse = verseData ?? DEFAULT_KOINE_VERSE;
+  const interlinearLoaded = hasGreekInterlinear(currentRef);
+
+  const selectedWord = useMemo(
+    () => displayVerse.words.find((w) => w.id === selectedWordId) ?? null,
+    [displayVerse.words, selectedWordId],
+  );
+
+  const handleRefChange = (ref: string) => {
+    setCurrentRef(ref);
+    setSelectedWordId(null);
+  };
+
   const handleSelectWord = (word: GreekInterlinearWord) => {
-    setSelectedWordId((cur) => (cur === word.id ? null : word.id));
+    setSelectedWordId(word.id);
   };
 
   return (
@@ -31,9 +71,7 @@ export default function KoineHydataPage() {
             </Link>{' '}
             for the New Testament: KJV English beside{' '}
             <span className="font-medium text-[var(--pw-text-soft)]">Koine Greek</span> (SBLGNT),
-            with per-word Strong&apos;s and etymology insights instead of Hebrew pictographs. Starting
-            point: <span className="font-mono text-[var(--pw-accent-gold)]">John 1:1</span> — the
-            thematic counterpart to Genesis 1:1.
+            with per-word Strong&apos;s and etymology insights. Click any Greek word for its insight.
           </p>
         </div>
 
@@ -41,47 +79,70 @@ export default function KoineHydataPage() {
           id="reader"
           className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-3 mb-3 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"
         >
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="font-mono text-sm text-[var(--pw-accent-gold)]">{verse.ref}</div>
-            <div className="text-[10px] text-[var(--pw-text-faint)] uppercase tracking-widest">
-              SBLGNT · MVP
-            </div>
+          <div className="mb-2">
+            <NtVerseNavigator currentRef={currentRef} onSelect={handleRefChange} />
           </div>
 
           <div className="mb-2">
-            <GreekVerseDisplay verse={verse} />
+            {hasData ? (
+              <GreekVerseDisplay verse={displayVerse} />
+            ) : (
+              <div className="card p-3 text-sm text-[var(--pw-text-muted)]">
+                No text for{' '}
+                <span className="font-mono text-[var(--pw-accent-gold)]">{currentRef}</span>
+              </div>
+            )}
           </div>
 
-          <GreekReaderPanel>
-            {verse.words.map((word, wi) => {
-              const isSelected = selectedWordId === word.id;
-              return (
-                <span key={word.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectWord(word)}
-                    className={`inline scripture-greek text-inherit bg-transparent border-0 p-0 cursor-pointer rounded-sm ${
-                      isSelected
-                        ? 'word-in-passage bg-[var(--pw-accent)]/25 ring-1 ring-[var(--pw-accent)]/50'
-                        : 'hover:bg-[var(--pw-accent)]/10'
-                    }`}
-                  >
-                    {word.greek}
-                  </button>
-                  {wi < verse.words.length - 1 && ' '}
-                </span>
-              );
-            })}
-          </GreekReaderPanel>
+          <div>
+            {hasGreekWords ? (
+              <GreekReaderPanel selectedWord={selectedWord}>
+                {displayVerse.words.map((word, wi) => {
+                  const isSelected = selectedWordId === word.id;
+                  return (
+                    <span key={word.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectWord(word)}
+                        className={`inline scripture-greek text-inherit bg-transparent border-0 p-0 cursor-pointer rounded-sm ${
+                          isSelected
+                            ? 'word-in-passage bg-[var(--pw-accent)]/25 ring-1 ring-[var(--pw-accent)]/50'
+                            : 'hover:bg-[var(--pw-accent)]/10'
+                        }`}
+                      >
+                        {word.greek}
+                      </button>
+                      {wi < displayVerse.words.length - 1 && ' '}
+                    </span>
+                  );
+                })}
+              </GreekReaderPanel>
+            ) : (
+              <div className="bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] p-4 rounded-xl text-[var(--pw-text-muted)] text-sm">
+                {hasData
+                  ? `Greek interlinear for ${currentRef} is not loaded yet — KJV English is shown above.`
+                  : `Greek for ${currentRef} not found.`}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div id="insights" className="mb-8">
-          <GreekInterlinear
-            words={verse.words}
-            selectedId={selectedWordId}
-            onSelect={handleSelectWord}
-          />
-        </div>
+        {hasGreekWords && (
+          <div id="insights" className="mb-8">
+            <GreekInterlinear
+              words={displayVerse.words}
+              selectedId={selectedWordId}
+              onSelect={handleSelectWord}
+            />
+          </div>
+        )}
+
+        {!interlinearLoaded && hasData && (
+          <p className="text-xs text-[var(--pw-text-faint)] mb-8 -mt-4">
+            Navigate the full New Testament; Greek interlinear is seeded for loaded verses (starting
+            with John 1:1).
+          </p>
+        )}
 
         <KoineSources />
 
