@@ -28,8 +28,11 @@ export function HebrewGraphemeText({
   const { font } = useHebrewFont();
   const graphemes = segmentHebrewForDisplay(text, font);
 
+  const aramaicClass =
+    script === 'aramaic' ? 'scripture-aramaic text-[var(--pw-aramaic)]' : undefined;
+
   return (
-    <span dir="rtl" className={script === 'aramaic' ? 'scripture-aramaic' : undefined}>
+    <span dir="rtl" className={aramaicClass}>
       {graphemes.map((grapheme, idx) => {
         const consonant = graphemeConsonant(grapheme);
         const isHighlighted = interactive && !!selectedLetter && consonant === selectedLetter;

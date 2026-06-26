@@ -21,7 +21,8 @@ export function ScriptureHebrew({
   title,
 }: ScriptureHebrewProps) {
   const { font } = useHebrewFont();
-  const scriptClass = script === 'aramaic' ? 'scripture-aramaic' : undefined;
+  const scriptClass =
+    script === 'aramaic' ? 'scripture-aramaic text-[var(--pw-aramaic)]' : undefined;
 
   return (
     <span className={[className, scriptClass].filter(Boolean).join(' ')} dir={dir} title={title}>
