@@ -2,6 +2,9 @@
 
 import React from 'react';
 
+const VERSE_MAPPING_ISSUE_URL =
+  'https://github.com/brianmcconnel/paleoMem/issues/new?title=Verse%20mapping%20issue&body=**KJV%20reference%3A**%20%0A%0A**OSHB%20shown%20(if%20any)%3A**%20%0A%0A**What%20looks%20wrong%3F**%20%0A%0A**Expected%20behavior%3A**%20%0A';
+
 function FaqItem({ question, children }: { question: string; children: React.ReactNode }) {
   return (
     <details className="group rounded-lg border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/40 open:bg-[var(--pw-bg-elevated)]/70 transition-colors">
@@ -119,6 +122,18 @@ export function Faq() {
           <p className="text-xs text-[var(--pw-text-faint)]">
             Automatic mapping covers chapter-boundary splits (Numbers 16–17, 1 Kings 4–5, Job 41–42),
             psalm superscriptions, and passages like Daniel 4, Joel 2–3, and Malachi 4.
+          </p>
+          <p>
+            See a mapping that looks wrong?{' '}
+            <a
+              href={VERSE_MAPPING_ISSUE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--pw-link)] hover:underline"
+            >
+              Report a verse mapping problem on GitHub
+            </a>
+            . Include the KJV reference, what OSHB reference was shown (if any), and what you expected.
           </p>
         </FaqItem>
       </div>
