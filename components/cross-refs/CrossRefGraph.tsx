@@ -13,20 +13,28 @@ import {
 } from '../../lib/force-graph-layout';
 import {
   BOOK_LABEL_CHARACTER_SET,
+  CHAPTER_LABEL_CHARACTER_SET,
   VERSE_LABEL_CHARACTER_SET,
   bookNodeVidToBookNum,
+  bookNumToBookName,
   bookNumToNodeVid,
+  chapterNodeVidToBookChapter,
   isBookNodeVid,
+  isChapterNodeVid,
+  isHubNodeVid,
   verseAccentColor,
+  verseToChapterNodeVid,
   vidToBookNum,
-  vidToChapterVerse,
+  vidToChapterNum,
   vidToRef,
+  vidToVerseNum,
 } from '../../lib/verse-id';
 
 const OT_GOLD: [number, number, number, number] = [197, 164, 110, 255];
 const NT_BLUE: [number, number, number, number] = [59, 130, 246, 255];
 const HIGHLIGHT: [number, number, number, number] = [255, 210, 90, 255];
 const BOOK_GREEN: [number, number, number, number] = [74, 222, 128, 255];
+const CHAPTER_TEAL: [number, number, number, number] = [45, 212, 160, 255];
 const LABEL_WHITE: [number, number, number, number] = [232, 238, 245, 255];
 
 const TEXT_FONT_SETTINGS = {
@@ -83,7 +91,17 @@ function highlightBookNum(
 ): number | null {
   if (highlightVid == null) return null;
   if (isBookNodeVid(highlightVid)) return bookNodeVidToBookNum(highlightVid);
+  if (isChapterNodeVid(highlightVid)) return chapterNodeVidToBookChapter(highlightVid).bookNum;
   return vidToBookNum(highlightVid);
+}
+
+function highlightChapterNum(
+  highlightVid: number | null | undefined,
+): number | null {
+  if (highlightVid == null) return null;
+  if (isChapterNodeVid(highlightVid)) return chapterNodeVidToBookChapter(highlightVid).chapter;
+  if (isBookNodeVid(highlightVid) || isChapterNodeVid(highlightVid)) return null;
+  return vidToChapterNum(highlightVid);
 }
 
 function verseBelongsToBook(verseVid: number, bookNum: number | null): boolean {
@@ -92,13 +110,14 @@ function verseBelongsToBook(verseVid: number, bookNum: number | null): boolean {
 }
 
 function voteToWidth(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
-  if (kind === 'book') return 1.2;
+  if (kind === 'book' || kind === 'chapter') return 1.1;
   if (maxVotes <= 0) return 1;
   const base = kind === 'mesh' ? 0.8 : 1.5;
   return base + (votes / maxVotes) * (kind === 'mesh' ? 3 : 8);
 }
 
 function baseLineColor(kind: GraphLink['kind']): [number, number, number, number] {
+  if (kind === 'chapter') return [45, 212, 160, 110];
   if (kind === 'book') return [74, 222, 128, 120];
   if (kind === 'mesh') return [120, 135, 160, 100];
   return [80, 150, 240, 170];
@@ -109,15 +128,38 @@ function lineConnectsVid(line: LineDatum, vid: number | null | undefined): boole
   return line.fromVid === vid || line.toVid === vid;
 }
 
-function bookLinkForVerse(line: LineDatum, verseVid: number | null | undefined): boolean {
-  if (verseVid == null || isBookNodeVid(verseVid)) return false;
-  return line.kind === 'book' && line.fromVid === verseVid;
+function chapterLinkForVerse(line: LineDatum, verseVid: number | null | undefined): boolean {
+  if (verseVid == null || isHubNodeVid(verseVid)) return false;
+  return line.kind === 'chapter' && line.fromVid === verseVid;
+}
+
+function bookLinkForChapterOfVerse(
+  line: LineDatum,
+  verseVid: number | null | undefined,
+): boolean {
+  if (verseVid == null || isHubNodeVid(verseVid)) return false;
+  return line.kind === 'book' && line.fromVid === verseToChapterNodeVid(verseVid);
+}
+
+function membershipLinkForVerse(
+  line: LineDatum,
+  verseVid: number | null | undefined,
+): boolean {
+  return chapterLinkForVerse(line, verseVid) || bookLinkForChapterOfVerse(line, verseVid);
 }
 
 function lineTouchesBook(line: LineDatum, bookNum: number | null): boolean {
   if (bookNum == null) return true;
   if (line.kind === 'book') {
-    return line.toVid === -bookNum || line.fromVid === -bookNum;
+    return line.toVid === bookNumToNodeVid(bookNum);
+  }
+  if (line.kind === 'chapter') {
+    const chapterBook = isChapterNodeVid(line.toVid)
+      ? chapterNodeVidToBookChapter(line.toVid).bookNum
+      : isChapterNodeVid(line.fromVid)
+        ? chapterNodeVidToBookChapter(line.fromVid).bookNum
+        : vidToBookNum(line.fromVid);
+    return chapterBook === bookNum;
   }
   return verseBelongsToBook(line.fromVid, bookNum) || verseBelongsToBook(line.toVid, bookNum);
 }
@@ -133,9 +175,25 @@ function lineIsActive(
     return lineTouchesBook(line, bookNum);
   }
 
-  if (bookLinkForVerse(line, activeLinkVid)) return true;
+  if (isChapterNodeVid(activeLinkVid)) {
+    if (line.kind === 'chapter') return line.toVid === activeLinkVid;
+    if (line.kind === 'book') return line.fromVid === activeLinkVid;
+    const { bookNum: chapterBook, chapter } = chapterNodeVidToBookChapter(activeLinkVid);
+    if (line.kind === 'primary' || line.kind === 'mesh') {
+      return (
+        vidToBookNum(line.fromVid) === chapterBook &&
+        vidToChapterNum(line.fromVid) === chapter
+      ) || (
+        vidToBookNum(line.toVid) === chapterBook &&
+        vidToChapterNum(line.toVid) === chapter
+      );
+    }
+    return false;
+  }
 
-  if (line.kind === 'book') {
+  if (membershipLinkForVerse(line, activeLinkVid)) return true;
+
+  if (line.kind === 'book' || line.kind === 'chapter') {
     return line.fromVid === activeLinkVid || line.toVid === activeLinkVid;
   }
 
@@ -153,7 +211,8 @@ function lineColor(
     return [base[0], base[1], base[2], Math.round(base[3] * 0.12)];
   }
 
-  if (bookLinkForVerse(line, activeLinkVid)) return [120, 255, 175, 255];
+  if (membershipLinkForVerse(line, activeLinkVid)) return [120, 255, 175, 255];
+  if (line.kind === 'chapter') return [80, 235, 185, 230];
   if (line.kind === 'book') return [74, 222, 128, 220];
   if (lineConnectsVid(line, activeLinkVid)) {
     if (line.kind === 'mesh') return [200, 215, 235, 220];
@@ -171,7 +230,8 @@ function lineWidth(
   const base = voteToWidth(line.votes, maxVotes, line.kind);
   if (activeLinkVid == null) return base;
   if (!lineIsActive(line, activeLinkVid)) return Math.max(0.35, base * 0.4);
-  if (bookLinkForVerse(line, activeLinkVid)) return 3.5;
+  if (membershipLinkForVerse(line, activeLinkVid)) return 3.5;
+  if (line.kind === 'chapter') return 2.2;
   if (line.kind === 'book') return 2;
   if (lineConnectsVid(line, activeLinkVid)) return base * 1.5 + 2;
   return base;
@@ -186,13 +246,31 @@ function nodeIsActive(
   if (node.kind === 'book') {
     return node.vid === highlightVid || node.bookNum === highlightBookNum(highlightVid);
   }
+  if (node.kind === 'chapter') {
+    if (node.vid === highlightVid) return true;
+    const bookNum = highlightBookNum(highlightVid);
+    const chapterNum = highlightChapterNum(highlightVid);
+    if (bookNum != null && node.bookNum === bookNum) {
+      if (chapterNum == null || isBookNodeVid(highlightVid)) return true;
+      return node.chapterNum === chapterNum;
+    }
+    return false;
+  }
   if (isBookNodeVid(highlightVid)) {
     return verseBelongsToBook(node.vid, highlightBookNum(highlightVid));
+  }
+  if (isChapterNodeVid(highlightVid)) {
+    const { bookNum, chapter } = chapterNodeVidToBookChapter(highlightVid);
+    return (
+      node.bookNum === bookNum &&
+      (node.kind !== 'verse' || node.chapterNum === chapter)
+    );
   }
   if (node.vid === highlightVid) return true;
   return crossRefLines.some(
     (line) =>
       line.kind !== 'book' &&
+      line.kind !== 'chapter' &&
       ((line.fromVid === highlightVid && line.toVid === node.vid) ||
         (line.toVid === highlightVid && line.fromVid === node.vid)),
   );
@@ -207,6 +285,7 @@ function labelWhite(
 
 function nodeRadius(node: LayoutNode): number {
   if (node.kind === 'book') return 5 + Math.sqrt(node.degree) * 0.85;
+  if (node.kind === 'chapter') return 4 + Math.sqrt(node.degree) * 0.75;
   return 3 + Math.sqrt(node.degree) * 1.25;
 }
 
@@ -238,10 +317,28 @@ function bookFillColor(
   return BOOK_GREEN;
 }
 
+function chapterFillColor(
+  node: LayoutNode,
+  highlightVid: number | null | undefined,
+  crossRefLines: LineDatum[],
+): [number, number, number, number] {
+  if (highlightVid != null && !nodeIsActive(node, highlightVid, crossRefLines)) {
+    return [CHAPTER_TEAL[0], CHAPTER_TEAL[1], CHAPTER_TEAL[2], 45];
+  }
+  if (node.vid === highlightVid) return [CHAPTER_TEAL[0], CHAPTER_TEAL[1], CHAPTER_TEAL[2], 255];
+  return CHAPTER_TEAL;
+}
+
 function graphNodeLabel(vid: number, nodes: LayoutNode[]): string {
   if (isBookNodeVid(vid)) {
     const bookNode = nodes.find((n) => n.vid === vid);
     return bookNode?.bookName ?? `Book ${bookNodeVidToBookNum(vid)}`;
+  }
+  if (isChapterNodeVid(vid)) {
+    const chapterNode = nodes.find((n) => n.vid === vid);
+    const { bookNum, chapter } = chapterNodeVidToBookChapter(vid);
+    const bookName = bookNumToBookName(bookNum);
+    return `${bookName} ${chapter}`;
   }
   return vidToRef(vid);
 }
@@ -268,7 +365,7 @@ function applyBookDragPositions(
       return node;
     }
 
-    const bookVid = bookNumToNodeVid(vidToBookNum(node.vid));
+    const bookVid = bookNumToNodeVid(node.bookNum ?? vidToBookNum(node.vid));
     const delta = deltas.get(bookVid);
     if (!delta) return node;
     return { ...node, x: node.x + delta.dx, y: node.y + delta.dy };
@@ -345,9 +442,10 @@ export function CrossRefGraph({
     const lines = buildLineData(graphLayout.links, nodeMap);
     const verseNodes = nodes.filter((n) => n.kind === 'verse');
     const bookNodes = nodes.filter((n) => n.kind === 'book');
-    const crossRefLines = lines.filter((l) => l.kind !== 'book');
+    const chapterNodes = nodes.filter((n) => n.kind === 'chapter');
+    const crossRefLines = lines.filter((l) => l.kind !== 'book' && l.kind !== 'chapter');
 
-    return { nodes, verseNodes, bookNodes, lines, crossRefLines };
+    return { nodes, verseNodes, bookNodes, chapterNodes, lines, crossRefLines };
   }, [graphLayout, bookDragPositions]);
 
   useEffect(() => {
@@ -358,7 +456,7 @@ export function CrossRefGraph({
     setWebglError(null);
   }, [graphKey]);
 
-  const { verseNodes, bookNodes, lines, crossRefLines, nodes } = displayData;
+  const { verseNodes, bookNodes, chapterNodes, lines, crossRefLines, nodes } = displayData;
   const activeLinkVid = highlightVid ?? selectedVid ?? null;
 
   const updateBookDrag = useCallback((info: PickingInfo) => {
@@ -396,6 +494,10 @@ export function CrossRefGraph({
         }
         const line = info.object as LineDatum;
         if (line.kind === 'book') {
+          onHoverRef.current?.(line.toVid);
+          return;
+        }
+        if (line.kind === 'chapter') {
           onHoverRef.current?.(line.toVid);
           return;
         }
@@ -499,6 +601,80 @@ export function CrossRefGraph({
         ]
       : []),
     new ScatterplotLayer<LayoutNode>({
+      id: 'vav-chapter-halo',
+      data: chapterNodes,
+      getPosition: (d) => [d.x, d.y, 0],
+      getRadius: (d) => nodeRadius(d) + 3,
+      radiusUnits: 'pixels',
+      filled: true,
+      stroked: false,
+      billboard: true,
+      getFillColor: (d) => {
+        const [r, g, b] = chapterFillColor(d, highlightVid, crossRefLines);
+        return [r, g, b, 60] as [number, number, number, number];
+      },
+      parameters: LAYER_PARAMETERS,
+      pickable: false,
+      updateTriggers: {
+        getFillColor: [highlightVid, crossRefLines.length],
+        getPosition: [bookDragPositions],
+      },
+    }),
+    new ScatterplotLayer<LayoutNode>({
+      id: 'vav-chapter-core',
+      data: chapterNodes,
+      getPosition: (d) => [d.x, d.y, 0],
+      getRadius: (d) => nodeRadius(d),
+      radiusUnits: 'pixels',
+      radiusMinPixels: 5,
+      radiusMaxPixels: 12,
+      filled: true,
+      stroked: true,
+      billboard: true,
+      lineWidthUnits: 'pixels',
+      getLineWidth: () => 1.25,
+      getFillColor: (d) => chapterFillColor(d, highlightVid, crossRefLines),
+      getLineColor: [16, 36, 32, 255],
+      parameters: LAYER_PARAMETERS,
+      pickable: true,
+      autoHighlight: true,
+      highlightColor: [255, 255, 255, 80],
+      onHover: (info) =>
+        onHoverRef.current?.(info.object ? (info.object as LayoutNode).vid : null),
+      updateTriggers: {
+        getFillColor: [highlightVid, crossRefLines.length],
+        getPosition: [bookDragPositions],
+      },
+    }),
+    ...(chapterNodes.length > 0
+      ? [
+          new TextLayer<LayoutNode>({
+            id: 'vav-chapter-labels',
+            data: chapterNodes,
+            getPosition: (d) => [d.x, d.y, 0],
+            getText: (d) => d.chapterLabel ?? '',
+            getColor: (d) => labelWhite(nodeIsActive(d, highlightVid, crossRefLines)),
+            getSize: 9,
+            sizeUnits: 'pixels',
+            getTextAnchor: 'middle',
+            getAlignmentBaseline: 'center',
+            billboard: true,
+            fontFamily: 'Monaco, monospace',
+            fontWeight: 'normal',
+            fontSettings: TEXT_FONT_SETTINGS,
+            outlineWidth: 2,
+            outlineColor: [11, 17, 24, 220],
+            parameters: LAYER_PARAMETERS,
+            pickable: false,
+            characterSet: CHAPTER_LABEL_CHARACTER_SET,
+            updateTriggers: {
+              getColor: [highlightVid],
+              getPosition: [bookDragPositions],
+            },
+          }),
+        ]
+      : []),
+    new ScatterplotLayer<LayoutNode>({
       id: 'vav-scatter-halo',
       data: verseNodes,
       getPosition: (d) => [d.x, d.y, 0],
@@ -551,7 +727,7 @@ export function CrossRefGraph({
             id: 'vav-verse-labels',
             data: verseNodes,
             getPosition: (d) => [d.x, d.y, 0],
-            getText: (d) => vidToChapterVerse(d.vid),
+            getText: (d) => String(vidToVerseNum(d.vid)),
             getColor: (d) => labelWhite(nodeIsActive(d, highlightVid, crossRefLines)),
             getSize: 9,
             sizeUnits: 'pixels',
@@ -582,7 +758,16 @@ export function CrossRefGraph({
         const line = info.object as LineDatum;
         if (line.kind === 'book') {
           const bookNode = bookNodes.find((n) => n.vid === line.toVid);
-          return { text: `${bookNode?.bookName ?? 'Book'} · membership link` };
+          return { text: `${bookNode?.bookName ?? 'Book'} · book hub link` };
+        }
+        if (line.kind === 'chapter') {
+          const chapterNode = chapterNodes.find((n) => n.vid === line.toVid);
+          const bookName = chapterNode?.bookNum
+            ? bookNumToBookName(chapterNode.bookNum)
+            : 'Chapter';
+          return {
+            text: `${bookName} ${chapterNode?.chapterNum ?? ''} · chapter hub link`,
+          };
         }
         return {
           text: `${vidToRef(line.fromVid)} ↔ ${vidToRef(line.toVid)}\n${line.votes} votes`,
@@ -592,9 +777,13 @@ export function CrossRefGraph({
       if (node.kind === 'book') {
         return { text: `${node.bookName}\n${node.degree} cross-ref links · drag to reposition` };
       }
+      if (node.kind === 'chapter') {
+        const bookName = node.bookNum ? bookNumToBookName(node.bookNum) : 'Book';
+        return { text: `${bookName} ${node.chapterNum}\n${node.degree} verses in chapter` };
+      }
       return { text: `${vidToRef(node.vid)}\n${node.degree} links` };
     },
-    [bookNodes],
+    [bookNodes, chapterNodes],
   );
 
   const activeVid = highlightVid ?? selectedVid;
@@ -613,8 +802,8 @@ export function CrossRefGraph({
   return (
     <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field">
       <div className="absolute top-2 left-3 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] pointer-events-none">
-        Layer {linkLayers} · {verseNodes.length} verses · {bookNodes.length} books ·{' '}
-        {lines.length} edges · {tooltip}
+        Layer {linkLayers} · {verseNodes.length} verses · {chapterNodes.length} chapters ·{' '}
+        {bookNodes.length} books · {lines.length} edges · {tooltip}
       </div>
       <div className="absolute bottom-2 left-3 z-10 flex flex-wrap gap-3 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
         <span className="inline-flex items-center gap-1.5">
@@ -625,6 +814,13 @@ export function CrossRefGraph({
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-[var(--pw-success)] inline-block" /> Book hub
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className="w-3 h-3 rounded-full inline-block"
+            style={{ backgroundColor: 'rgb(45, 212, 160)' }}
+          />{' '}
+          Chapter hub
         </span>
         <span className="text-[var(--pw-text-faint)]">
           Scroll to zoom · drag canvas to pan · drag book hub to reposition · click verse to select

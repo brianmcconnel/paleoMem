@@ -31,15 +31,35 @@ export function vidToBookNum(vid: number): number {
   return Math.floor(vid / 1_000_000);
 }
 
-/** Chapter:verse label for graph nodes (e.g. 1001001 → "1:1"). */
-export function vidToChapterVerse(vid: number): string {
-  const chapter = Math.floor((vid % 1_000_000) / 1_000);
-  const verse = vid % 1_000;
-  return `${chapter}:${verse}`;
+export function vidToChapterNum(vid: number): number {
+  return Math.floor((vid % 1_000_000) / 1_000);
 }
 
-/** Pre-baked charset for deck.gl verse labels (chapter:verse). */
-export const VERSE_LABEL_CHARACTER_SET = '0123456789:';
+export function vidToVerseNum(vid: number): number {
+  return vid % 1_000;
+}
+
+/** Chapter:verse label for graph nodes (e.g. 1001001 → "1:1"). */
+export function vidToChapterVerse(vid: number): string {
+  return `${vidToChapterNum(vid)}:${vidToVerseNum(vid)}`;
+}
+
+/** Pre-baked charset for deck.gl verse number labels. */
+export const VERSE_LABEL_CHARACTER_SET = '0123456789';
+
+/** Pre-baked charset for deck.gl chapter number labels. */
+export const CHAPTER_LABEL_CHARACTER_SET = '0123456789';
+
+const CHAPTER_VID_SCALE = 10_000;
+
+/** Synthetic graph id for a chapter hub (negative, below book hub range). */
+export function chapterToNodeVid(bookNum: number, chapter: number): number {
+  return -(bookNum * CHAPTER_VID_SCALE + chapter);
+}
+
+export function verseToChapterNodeVid(verseVid: number): number {
+  return chapterToNodeVid(vidToBookNum(verseVid), vidToChapterNum(verseVid));
+}
 
 /** Pre-baked charset for deck.gl book name labels. */
 export const BOOK_LABEL_CHARACTER_SET = (() => {
@@ -55,12 +75,28 @@ export function bookNumToNodeVid(bookNum: number): number {
   return -bookNum;
 }
 
+export function isChapterNodeVid(vid: number): boolean {
+  return vid <= -CHAPTER_VID_SCALE;
+}
+
 export function isBookNodeVid(vid: number): boolean {
+  return vid < 0 && vid > -CHAPTER_VID_SCALE;
+}
+
+export function isHubNodeVid(vid: number): boolean {
   return vid < 0;
 }
 
 export function bookNodeVidToBookNum(vid: number): number {
   return -vid;
+}
+
+export function chapterNodeVidToBookChapter(vid: number): { bookNum: number; chapter: number } {
+  const code = -vid;
+  return {
+    bookNum: Math.floor(code / CHAPTER_VID_SCALE),
+    chapter: code % CHAPTER_VID_SCALE,
+  };
 }
 
 export function bookNumToBookName(bookNum: number): string {

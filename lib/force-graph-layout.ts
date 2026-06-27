@@ -14,25 +14,31 @@ import {
   bookNodeVidToBookNum,
   bookNumToBookName,
   bookNumToNodeVid,
+  chapterNodeVidToBookChapter,
+  chapterToNodeVid,
   isBookNodeVid,
+  isChapterNodeVid,
   vidToBookNum,
+  vidToChapterNum,
 } from './verse-id';
 
 export type GraphLink = {
   fromVid: number;
   toVid: number;
   votes: number;
-  kind: 'primary' | 'mesh' | 'book';
+  kind: 'primary' | 'mesh' | 'book' | 'chapter';
 };
 
-export type LayoutNodeKind = 'verse' | 'book';
+export type LayoutNodeKind = 'verse' | 'book' | 'chapter';
 
 export type LayoutNode = {
   vid: number;
   kind: LayoutNodeKind;
   bookNum?: number;
+  chapterNum?: number;
   bookName?: string;
   bookLabel?: string;
+  chapterLabel?: string;
   isCenter: boolean;
   degree: number;
   weight: number;
@@ -44,6 +50,7 @@ type SimNode = SimulationNodeDatum & {
   vid: number;
   kind: LayoutNodeKind;
   bookNum?: number;
+  chapterNum?: number;
   isCenter: boolean;
   degree: number;
   weight: number;
@@ -58,11 +65,17 @@ type SimLink = SimulationLinkDatum<SimNode> & {
 const LINK_STRENGTH = 0.32;
 const PRIMARY_LINK_DISTANCE = 36;
 const MESH_LINK_DISTANCE = 28;
-const BOOK_LINK_DISTANCE = 12;
-const BOOK_LINK_STRENGTH = 0.95;
+const CHAPTER_LINK_DISTANCE = 9;
+const CHAPTER_LINK_STRENGTH = 0.92;
+const BOOK_CHAPTER_LINK_DISTANCE = 24;
+const BOOK_CHAPTER_LINK_STRENGTH = 0.78;
 const BOOK_HUB_MIN_SPACING = 200;
 const CROSS_BOOK_LINK_DISTANCE = 110;
 const CENTER_SPOKE_LINK_DISTANCE = 130;
+
+function chapterKey(bookNum: number, chapter: number): string {
+  return `${bookNum}:${chapter}`;
+}
 
 /** Build an ego-network: center verse, its TSK links, and cross-links among neighbors. */
 export function buildEgoGraph(
@@ -120,17 +133,19 @@ export function buildEgoGraph(
       bump(link.toVid, link.votes * 0.5);
     });
 
-  const membersByBook = new Map<number, number[]>();
+  const membersByChapter = new Map<string, number[]>();
   for (const vid of degreeMap.keys()) {
     const bookNum = vidToBookNum(vid);
-    const members = membersByBook.get(bookNum) ?? [];
+    const chapter = vidToChapterNum(vid);
+    const key = chapterKey(bookNum, chapter);
+    const members = membersByChapter.get(key) ?? [];
     members.push(vid);
-    membersByBook.set(bookNum, members);
+    membersByChapter.set(key, members);
   }
 
   const bookLinkCount = new Map<number, number>();
   for (const link of links) {
-    if (link.kind === 'book') continue;
+    if (link.kind === 'book' || link.kind === 'chapter') continue;
     const fromBook = vidToBookNum(link.fromVid);
     const toBook = vidToBookNum(link.toVid);
     bookLinkCount.set(fromBook, (bookLinkCount.get(fromBook) ?? 0) + 1);
@@ -139,13 +154,37 @@ export function buildEgoGraph(
     }
   }
 
-  for (const [bookNum, members] of membersByBook) {
-    const bookVid = bookNumToNodeVid(bookNum);
-    degreeMap.set(bookVid, bookLinkCount.get(bookNum) ?? members.length);
-    weightMap.set(bookVid, 0);
+  const chaptersByBook = new Map<number, number[]>();
+
+  for (const [key, members] of membersByChapter) {
+    const [bookNumStr, chapterStr] = key.split(':');
+    const bookNum = Number(bookNumStr);
+    const chapter = Number(chapterStr);
+    const chapterVid = chapterToNodeVid(bookNum, chapter);
+    degreeMap.set(chapterVid, members.length);
+    weightMap.set(chapterVid, 0);
+
+    const bookChapters = chaptersByBook.get(bookNum) ?? [];
+    bookChapters.push(chapter);
+    chaptersByBook.set(bookNum, bookChapters);
+
     for (const verseVid of members) {
       links.push({
         fromVid: verseVid,
+        toVid: chapterVid,
+        votes: 0,
+        kind: 'chapter',
+      });
+    }
+  }
+
+  for (const [bookNum, chapters] of chaptersByBook) {
+    const bookVid = bookNumToNodeVid(bookNum);
+    degreeMap.set(bookVid, bookLinkCount.get(bookNum) ?? chapters.length);
+    weightMap.set(bookVid, 0);
+    for (const chapter of chapters) {
+      links.push({
+        fromVid: chapterToNodeVid(bookNum, chapter),
         toVid: bookVid,
         votes: 0,
         kind: 'book',
@@ -171,9 +210,27 @@ export function buildEgoGraph(
       };
     }
 
+    if (isChapterNodeVid(vid)) {
+      const { bookNum, chapter } = chapterNodeVidToBookChapter(vid);
+      return {
+        vid,
+        kind: 'chapter' as const,
+        bookNum,
+        chapterNum: chapter,
+        chapterLabel: String(chapter),
+        isCenter: false,
+        degree: degreeMap.get(vid) ?? 0,
+        weight: 0,
+        x: 0,
+        y: 0,
+      };
+    }
+
     return {
       vid,
       kind: 'verse' as const,
+      bookNum: vidToBookNum(vid),
+      chapterNum: vidToChapterNum(vid),
       isCenter: vid === centerVid,
       degree: degreeMap.get(vid) ?? 0,
       weight: weightMap.get(vid) ?? 0,
@@ -208,29 +265,55 @@ function seedBookNodeLayout(simNodes: SimNode[]): Map<number, { x: number; y: nu
   return anchors;
 }
 
-/** Place verses in a tight ring around their book hub before force simulation. */
-function seedVerseByBookLayout(simNodes: SimNode[]): void {
+function seedChapterByBookLayout(simNodes: SimNode[]): void {
   const bookByNum = new Map(
     simNodes.filter((n) => n.kind === 'book').map((n) => [n.bookNum ?? 0, n]),
   );
-  const membersByBook = new Map<number, SimNode[]>();
+  const chaptersByBook = new Map<number, SimNode[]>();
+
+  for (const node of simNodes) {
+    if (node.kind !== 'chapter') continue;
+    const bookNum = node.bookNum ?? 0;
+    const group = chaptersByBook.get(bookNum) ?? [];
+    group.push(node);
+    chaptersByBook.set(bookNum, group);
+  }
+
+  for (const [bookNum, chapters] of chaptersByBook) {
+    const book = bookByNum.get(bookNum);
+    if (!book) continue;
+    chapters.sort((a, b) => (a.chapterNum ?? 0) - (b.chapterNum ?? 0));
+    chapters.forEach((node, index) => {
+      const angle = (2 * Math.PI * index) / Math.max(1, chapters.length);
+      const orbit = 28 + Math.min(chapters.length, 12) * 2.2;
+      node.x = (book.x ?? 0) + Math.cos(angle) * orbit;
+      node.y = (book.y ?? 0) + Math.sin(angle) * orbit;
+    });
+  }
+}
+
+function seedVerseByChapterLayout(simNodes: SimNode[]): void {
+  const chapterByVid = new Map(
+    simNodes.filter((n) => n.kind === 'chapter').map((n) => [n.vid, n]),
+  );
+  const membersByChapter = new Map<number, SimNode[]>();
 
   for (const node of simNodes) {
     if (node.kind !== 'verse') continue;
-    const bookNum = vidToBookNum(node.vid);
-    const members = membersByBook.get(bookNum) ?? [];
+    const chapterVid = chapterToNodeVid(node.bookNum ?? vidToBookNum(node.vid), node.chapterNum ?? vidToChapterNum(node.vid));
+    const members = membersByChapter.get(chapterVid) ?? [];
     members.push(node);
-    membersByBook.set(bookNum, members);
+    membersByChapter.set(chapterVid, members);
   }
 
-  for (const [bookNum, members] of membersByBook) {
-    const book = bookByNum.get(bookNum);
-    if (!book) continue;
+  for (const [chapterVid, members] of membersByChapter) {
+    const chapter = chapterByVid.get(chapterVid);
+    if (!chapter) continue;
     members.forEach((node, index) => {
       const angle = (2 * Math.PI * index) / Math.max(1, members.length);
-      const orbit = 8 + Math.min(members.length, 18) * 1.1;
-      node.x = (book.x ?? 0) + Math.cos(angle) * orbit;
-      node.y = (book.y ?? 0) + Math.sin(angle) * orbit;
+      const orbit = 7 + Math.min(members.length, 14) * 1.0;
+      node.x = (chapter.x ?? 0) + Math.cos(angle) * orbit;
+      node.y = (chapter.y ?? 0) + Math.sin(angle) * orbit;
     });
   }
 }
@@ -254,7 +337,18 @@ function forceBookAnchor(
   };
 }
 
-/** Keep book hubs well separated even when verse clusters grow. */
+function membershipLinkStrength(link: SimLink): number {
+  if (link.kind === 'chapter') return CHAPTER_LINK_STRENGTH;
+  if (link.kind === 'book') return BOOK_CHAPTER_LINK_STRENGTH;
+  return LINK_STRENGTH;
+}
+
+function membershipLinkDistance(link: SimLink): number {
+  if (link.kind === 'chapter') return CHAPTER_LINK_DISTANCE;
+  if (link.kind === 'book') return BOOK_CHAPTER_LINK_DISTANCE;
+  return PRIMARY_LINK_DISTANCE;
+}
+
 function crossRefLinkDistance(link: SimLink, centerVid: number): number {
   const source = link.source as SimNode;
   const target = link.target as SimNode;
@@ -283,17 +377,39 @@ function crossRefLinkStrength(link: SimLink, centerVid: number): number {
   return link.kind === 'mesh' ? 0.22 : LINK_STRENGTH;
 }
 
-/** Pull every verse toward its book hub so spokes do not collapse on the center verse. */
-function forceVerseToBook(nodes: SimNode[]) {
-  const strength = 0.35;
+function forceVerseToChapter(nodes: SimNode[]) {
+  const strength = 0.32;
+  const chapterByVid = new Map(
+    nodes.filter((n) => n.kind === 'chapter').map((n) => [n.vid, n]),
+  );
+
+  return (alpha: number) => {
+    for (const node of nodes) {
+      if (node.kind !== 'verse') continue;
+      const chapterVid = chapterToNodeVid(
+        node.bookNum ?? vidToBookNum(node.vid),
+        node.chapterNum ?? vidToChapterNum(node.vid),
+      );
+      const chapter = chapterByVid.get(chapterVid);
+      if (!chapter) continue;
+      const dx = (chapter.x ?? 0) - (node.x ?? 0);
+      const dy = (chapter.y ?? 0) - (node.y ?? 0);
+      node.vx = (node.vx ?? 0) + dx * strength * alpha;
+      node.vy = (node.vy ?? 0) + dy * strength * alpha;
+    }
+  };
+}
+
+function forceChapterToBook(nodes: SimNode[]) {
+  const strength = 0.28;
   const bookByNum = new Map(
     nodes.filter((n) => n.kind === 'book').map((n) => [n.bookNum ?? 0, n]),
   );
 
   return (alpha: number) => {
     for (const node of nodes) {
-      if (node.kind !== 'verse') continue;
-      const book = bookByNum.get(vidToBookNum(node.vid));
+      if (node.kind !== 'chapter') continue;
+      const book = bookByNum.get(node.bookNum ?? 0);
       if (!book) continue;
       const dx = (book.x ?? 0) - (node.x ?? 0);
       const dy = (book.y ?? 0) - (node.y ?? 0);
@@ -324,7 +440,19 @@ function forceBookRepel(nodes: SimNode[]) {
   };
 }
 
-/** Layout: verses cluster around book hubs; cross-ref links shape local structure only. */
+function hubCollideRadius(node: SimNode): number {
+  if (node.kind === 'book') return 10 + Math.sqrt(node.degree) * 1.1;
+  if (node.kind === 'chapter') return 7 + Math.sqrt(node.degree) * 1.2;
+  return 7 + Math.sqrt(node.degree) * 2;
+}
+
+function hubChargeStrength(node: SimNode): number {
+  if (node.kind === 'book') return -160;
+  if (node.kind === 'chapter') return -36;
+  return -8;
+}
+
+/** Layout: book → chapter → verse hierarchy with cross-ref links shaping local clusters. */
 export function layoutForceGraph(
   nodes: LayoutNode[],
   links: GraphLink[],
@@ -342,7 +470,8 @@ export function layoutForceGraph(
   const nodeByVid = new Map(simNodes.map((n) => [n.vid, n]));
 
   const bookAnchors = seedBookNodeLayout(simNodes);
-  seedVerseByBookLayout(simNodes);
+  seedChapterByBookLayout(simNodes);
+  seedVerseByChapterLayout(simNodes);
 
   const simLinks: SimLink[] = links
     .map((link) => ({
@@ -359,29 +488,32 @@ export function layoutForceGraph(
       forceLink<SimNode, SimLink>(simLinks)
         .id((node) => node.vid)
         .strength((link) =>
-          link.kind === 'book' ? BOOK_LINK_STRENGTH : crossRefLinkStrength(link, centerVid),
+          link.kind === 'primary' || link.kind === 'mesh'
+            ? crossRefLinkStrength(link, centerVid)
+            : membershipLinkStrength(link),
         )
         .distance((link) =>
-          link.kind === 'book' ? BOOK_LINK_DISTANCE : crossRefLinkDistance(link, centerVid),
+          link.kind === 'primary' || link.kind === 'mesh'
+            ? crossRefLinkDistance(link, centerVid)
+            : membershipLinkDistance(link),
         )
         .iterations(5),
     )
     .force(
       'charge',
       forceManyBody<SimNode>()
-        .strength((node) => (node.kind === 'book' ? -160 : -8))
+        .strength((node) => hubChargeStrength(node))
         .distanceMax(520)
         .theta(0.85),
     )
     .force('book-anchor', forceBookAnchor(simNodes, bookAnchors))
     .force('book-repel', forceBookRepel(simNodes))
-    .force('verse-book', forceVerseToBook(simNodes))
+    .force('verse-chapter', forceVerseToChapter(simNodes))
+    .force('chapter-book', forceChapterToBook(simNodes))
     .force(
       'collide',
       forceCollide<SimNode>()
-        .radius((node) =>
-          node.kind === 'book' ? 10 + Math.sqrt(node.degree) * 1.1 : 7 + Math.sqrt(node.degree) * 2,
-        )
+        .radius((node) => hubCollideRadius(node))
         .strength(0.8)
         .iterations(2),
     )
@@ -391,25 +523,30 @@ export function layoutForceGraph(
   for (let i = 0; i < ticks; i += 1) simulation.tick();
 
   const scale = fitScale(simNodes, 480);
-  return simNodes.map((node) => ({
-    vid: node.vid,
-    kind: node.kind,
-    bookNum: node.bookNum,
-    bookName: node.kind === 'book' ? bookNumToBookName(node.bookNum ?? 0) : undefined,
-    bookLabel:
-      node.kind === 'book' ? bookAbbrev(bookNumToBookName(node.bookNum ?? 0)) : undefined,
-    isCenter: node.isCenter,
-    degree: node.degree,
-    weight: node.weight,
-    x: (node.x ?? 0) * scale,
-    y: (node.y ?? 0) * scale,
-  }));
+  return simNodes.map((node) => {
+    const bookName =
+      node.kind === 'book' ? bookNumToBookName(node.bookNum ?? 0) : undefined;
+    return {
+      vid: node.vid,
+      kind: node.kind,
+      bookNum: node.bookNum,
+      chapterNum: node.chapterNum,
+      bookName,
+      bookLabel: bookName ? bookAbbrev(bookName) : undefined,
+      chapterLabel: node.kind === 'chapter' ? String(node.chapterNum ?? '') : undefined,
+      isCenter: node.isCenter,
+      degree: node.degree,
+      weight: node.weight,
+      x: (node.x ?? 0) * scale,
+      y: (node.y ?? 0) * scale,
+    };
+  });
 }
 
 function fitScale(nodes: SimNode[], targetRadius: number): number {
   let maxR = 1;
   for (const node of nodes) {
-    if (node.kind === 'book') {
+    if (node.kind === 'book' || node.kind === 'chapter') {
       const r = Math.hypot(node.x ?? 0, node.y ?? 0);
       if (r > maxR) maxR = r;
     }
