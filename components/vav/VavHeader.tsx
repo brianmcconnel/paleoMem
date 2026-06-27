@@ -6,7 +6,7 @@ import { AppMenu } from '../AppMenu';
 export function VavHeader() {
   return (
     <header className="h-12 shrink-0 border-b border-[var(--pw-border)] bg-[var(--pw-bg-app)] sticky top-0 z-50">
-      <div className="h-full max-w-6xl mx-auto px-6 flex items-center justify-between">
+      <div className="h-full max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="vav-mark w-7 h-7 rounded flex items-center justify-center font-bold text-lg shrink-0 scripture-hebrew leading-none">
             ו

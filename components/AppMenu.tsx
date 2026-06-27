@@ -20,7 +20,7 @@ type MenuItem =
 const APP_LINKS: MenuItem[] = [
   { type: 'link', label: 'paleoMem (OT)', href: '/' },
   { type: 'link', label: 'koineHydata (NT)', href: '/koine' },
-  { type: 'link', label: 'Vav', href: '/vav' },
+  { type: 'link', label: 'Vav (Cross Ref)', href: '/vav' },
 ];
 
 const PALEO_SECTIONS: MenuItem[] = [

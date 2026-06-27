@@ -6,18 +6,23 @@ import { HelpInterlinearExample } from './HelpInterlinearExample';
 import { HebrewRtlNote, HEBREW_RTL_LABEL } from './HebrewRtlHint';
 import { InfoIcon } from './InfoIcon';
 import { KoineHelpContent } from './koine/KoineHelpContent';
+import { VavHelpContent } from './vav/VavHelpContent';
 import { scrollToSection } from '../lib/scroll-section';
 import {
   hasKoineVisitedBefore,
+  hasVavVisitedBefore,
   hasVisitedBefore,
   markKoineVisited,
+  markVavVisited,
   markVisited,
 } from '../lib/site-cookies';
 
-type HelpVariant = 'paleo' | 'koine';
+type HelpVariant = 'paleo' | 'koine' | 'vav';
 
 function getHelpVariant(pathname: string): HelpVariant {
-  return pathname === '/koine' || pathname.startsWith('/koine/') ? 'koine' : 'paleo';
+  if (pathname === '/vav' || pathname.startsWith('/vav/')) return 'vav';
+  if (pathname === '/koine' || pathname.startsWith('/koine/')) return 'koine';
+  return 'paleo';
 }
 
 function scrollToDedication() {
@@ -149,7 +154,21 @@ const HELP_META: Record<
       'bg-[var(--pw-accent)] border-[var(--pw-accent)] text-white hover:bg-[var(--pw-accent-hover)]',
     ctaClass: 'btn btn-primary',
   },
+  vav: {
+    title: 'Welcome to Vav',
+    subtitle: 'Quick guide to exploring scripture cross-references',
+    fabTitle: 'How to use Vav',
+    fabOpen: 'Close Vav help',
+    fabClosed: 'Open Vav help',
+    fabOpenClass:
+      'bg-[var(--pw-bg-panel)] border-[var(--pw-vav-accent)] text-[var(--pw-vav-accent)]',
+    fabClosedClass:
+      'border-[var(--pw-vav-accent)] text-[var(--pw-on-vav-mark)] hover:brightness-110',
+    ctaClass: 'btn btn-gold',
+  },
 };
+
+const VAV_HELP_GRADIENT = 'linear-gradient(135deg, var(--pw-accent-gold), var(--pw-vav-accent))';
 
 export function HelpGuide() {
   const pathname = usePathname();
@@ -160,13 +179,20 @@ export function HelpGuide() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const visited = variant === 'koine' ? hasKoineVisitedBefore() : hasVisitedBefore();
+    const visited =
+      variant === 'vav'
+        ? hasVavVisitedBefore()
+        : variant === 'koine'
+          ? hasKoineVisitedBefore()
+          : hasVisitedBefore();
     setIsOpen(!visited);
     setReady(true);
   }, [variant]);
 
   const closeHelp = () => {
-    if (variant === 'koine') {
+    if (variant === 'vav') {
+      markVavVisited();
+    } else if (variant === 'koine') {
       markKoineVisited();
     } else {
       markVisited();
@@ -226,7 +252,9 @@ export function HelpGuide() {
               </button>
             </div>
 
-            {variant === 'koine' ? (
+            {variant === 'vav' ? (
+              <VavHelpContent />
+            ) : variant === 'koine' ? (
               <KoineHelpContent />
             ) : (
               <PaleoHelpContent onDedicationClick={goToDedication} />
@@ -236,8 +264,17 @@ export function HelpGuide() {
               type="button"
               onClick={closeHelp}
               className={`mt-5 w-full text-sm font-medium ${meta.ctaClass}`}
+              style={
+                variant === 'vav'
+                  ? {
+                      background: VAV_HELP_GRADIENT,
+                      borderColor: 'var(--pw-vav-accent)',
+                      color: 'var(--pw-on-vav-mark)',
+                    }
+                  : undefined
+              }
             >
-              Got it — start reading
+              {variant === 'vav' ? 'Got it — start exploring' : 'Got it — start reading'}
             </button>
           </div>
         </>
@@ -249,6 +286,11 @@ export function HelpGuide() {
         className={`pointer-events-auto relative z-20 flex items-center justify-center w-11 h-11 rounded-full border shadow-lg transition-all ${
           isOpen ? meta.fabOpenClass : meta.fabClosedClass
         }`}
+        style={
+          variant === 'vav' && !isOpen
+            ? { background: VAV_HELP_GRADIENT, borderColor: 'var(--pw-vav-accent)' }
+            : undefined
+        }
         aria-label={isOpen ? meta.fabOpen : meta.fabClosed}
         aria-expanded={isOpen}
         title={meta.fabTitle}

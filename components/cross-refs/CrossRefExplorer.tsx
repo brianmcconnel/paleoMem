@@ -1,46 +1,60 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import {
   edgesForLayeredGraph,
-  getCrossRefMeta,
   isCrossRefDataLoaded,
   lookupCrossRefs,
 } from '../../lib/cross-refs';
+import {
+  appendToVavSelection,
+  DEFAULT_VAV_STATE,
+  getVavState,
+  setVavState,
+  type VavPersistedState,
+} from '../../lib/vav-state';
 import { VAV_GRAPH_LIMITS } from '../../lib/vav-graph-limits';
-import { refToVid, verseAccentColor, vidToRef } from '../../lib/verse-id';
-import dynamic from 'next/dynamic';
+import { refToVid, vidToRef } from '../../lib/verse-id';
 
 const CrossRefGraph = dynamic(() => import('./CrossRefGraph').then((m) => m.CrossRefGraph), {
   ssr: false,
-  loading: () => (
-    <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field h-[500px] flex items-center justify-center">
-      <p className="text-sm text-[var(--pw-text-muted)]">Loading graph…</p>
-    </div>
-  ),
+  loading: () => <VavLoadingState variant="graph" label="Loading graph…" />,
 });
+import { VavLoadingState } from '../vav/VavLoadingState';
 import { CrossRefVerseTexts } from './CrossRefVerseTexts';
 import { ScriptureVerseNavigator } from './ScriptureVerseNavigator';
 
-function verseColorVar(vid: number): string {
-  return verseAccentColor(vid) === 'gold' ? 'var(--pw-accent-gold)' : 'var(--pw-accent)';
+let bootstrappedVavState: VavPersistedState | undefined;
+
+function getBootstrappedVavState(): VavPersistedState {
+  if (bootstrappedVavState === undefined) {
+    bootstrappedVavState = getVavState() ?? DEFAULT_VAV_STATE;
+  }
+  return bootstrappedVavState;
 }
 
 export function CrossRefExplorer() {
-  const [activeRef, setActiveRef] = useState('Genesis 1:1');
-  const [selectionHistory, setSelectionHistory] = useState<string[]>(['Genesis 1:1']);
-  const [minVotes, setMinVotes] = useState(0);
-  const [linkLayers, setLinkLayers] = useState(1);
+  const [activeRef, setActiveRef] = useState(() => getBootstrappedVavState().activeRef);
+  const [selectionHistory, setSelectionHistory] = useState(
+    () => getBootstrappedVavState().selectionHistory,
+  );
+  const [minVotes, setMinVotes] = useState(() => getBootstrappedVavState().minVotes);
+  const [linkLayers, setLinkLayers] = useState(() => getBootstrappedVavState().linkLayers);
   const [hoverVid, setHoverVid] = useState<number | null>(null);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setVavState({ activeRef, selectionHistory, minVotes, linkLayers });
+    }, 200);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeRef, selectionHistory, minVotes, linkLayers]);
 
   const selectRef = (ref: string) => {
     setActiveRef(ref);
     setLinkLayers(1);
     setHoverVid(null);
-    setSelectionHistory((prev) => {
-      const without = prev.filter((r) => r !== ref);
-      return [ref, ...without];
-    });
+    setSelectionHistory((prev) => appendToVavSelection(prev, ref));
   };
 
   const removeRef = (ref: string) => {
@@ -52,17 +66,40 @@ export function CrossRefExplorer() {
     setHoverVid(null);
   };
 
-  const meta = getCrossRefMeta();
+  const resetVav = () => {
+    setActiveRef(DEFAULT_VAV_STATE.activeRef);
+    setSelectionHistory(DEFAULT_VAV_STATE.selectionHistory);
+    setMinVotes(DEFAULT_VAV_STATE.minVotes);
+    setLinkLayers(DEFAULT_VAV_STATE.linkLayers);
+    setHoverVid(null);
+  };
+
+  const isAtDefault =
+    activeRef === DEFAULT_VAV_STATE.activeRef &&
+    selectionHistory.length === DEFAULT_VAV_STATE.selectionHistory.length &&
+    selectionHistory.every((ref, index) => ref === DEFAULT_VAV_STATE.selectionHistory[index]) &&
+    minVotes === DEFAULT_VAV_STATE.minVotes &&
+    linkLayers === DEFAULT_VAV_STATE.linkLayers;
+
+  const deferredActiveRef = useDeferredValue(activeRef);
+  const deferredMinVotes = useDeferredValue(minVotes);
+  const deferredLinkLayers = useDeferredValue(linkLayers);
+
+  const isGraphLoading =
+    deferredActiveRef !== activeRef ||
+    deferredMinVotes !== minVotes ||
+    deferredLinkLayers !== linkLayers;
+
   const lookup = useMemo(
-    () => lookupCrossRefs(activeRef, minVotes),
-    [activeRef, minVotes],
+    () => lookupCrossRefs(deferredActiveRef, deferredMinVotes),
+    [deferredActiveRef, deferredMinVotes],
   );
   const graph = useMemo(
-    () => edgesForLayeredGraph(activeRef, minVotes, linkLayers),
-    [activeRef, minVotes, linkLayers],
+    () => edgesForLayeredGraph(deferredActiveRef, deferredMinVotes, deferredLinkLayers),
+    [deferredActiveRef, deferredMinVotes, deferredLinkLayers],
   );
 
-  const centerVid = refToVid(activeRef);
+  const centerVid = refToVid(deferredActiveRef);
 
   const selectedRef = selectionHistory[0] ?? activeRef;
   const selectedVid = refToVid(selectedRef);
@@ -77,77 +114,69 @@ export function CrossRefExplorer() {
     );
   }
 
+  const stepperButtonClass =
+    'inline-flex h-5 w-5 items-center justify-center rounded text-[var(--pw-text-muted)] hover:bg-[var(--pw-bg-elevated)] hover:text-[var(--pw-text)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
+
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-baseline gap-3 flex-wrap">
-          <h1 className="text-2xl font-semibold tracking-tight vav-title">Vav</h1>
-          <span className="scripture-hebrew text-xl text-[var(--pw-vav-accent)]" title="Vav — hook, peg, and">
-            ו
+      <div className="space-y-2">
+        <ScriptureVerseNavigator currentRef={activeRef} onSelect={selectRef} />
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--pw-text-faint)]">
+          <label className="inline-flex items-center gap-1.5">
+            <span>Votes ≥</span>
+            <input
+              type="range"
+              min={0}
+              max={Math.min(lookup?.maxVotes ?? 500, 500)}
+              value={minVotes}
+              onChange={(e) => setMinVotes(parseInt(e.target.value, 10))}
+              className="w-20 accent-[var(--pw-vav-accent)]"
+              aria-label="Minimum cross-reference votes"
+            />
+            <span className="font-mono tabular-nums text-[var(--pw-text-muted)] min-w-[2ch]">
+              {minVotes}
+            </span>
+          </label>
+
+          <span className="text-[var(--pw-border)] hidden sm:inline" aria-hidden>
+            |
           </span>
-        </div>
-        <p className="text-sm text-[var(--pw-text-muted)] mt-1 leading-relaxed max-w-2xl">
-          <span className="text-[var(--pw-text-soft)]">ו</span> — the letter that hooks and joins.
-          Explore Treasury of Scripture Knowledge links from{' '}
-          <a
-            href="https://a.openbible.info/data/cross-references.zip"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--pw-link)] hover:underline"
-          >
-            OpenBible.info
-          </a>{' '}
-          (CC BY 4.0) across Old and New Testaments. Gold nodes are OT, blue are NT — stronger
-          links pull verses closer in the force layout.
-        </p>
-        {meta && (
-          <p className="text-[10px] text-[var(--pw-text-faint)] mt-2">
-            {meta.edgeCount.toLocaleString()} edges · max vote {meta.maxVotes}
-          </p>
-        )}
-      </div>
 
-      <ScriptureVerseNavigator currentRef={activeRef} onSelect={selectRef} />
+          <div className="inline-flex items-center gap-1">
+            <span>Layers</span>
+            <button
+              type="button"
+              onClick={() => setLinkLayers((n) => Math.max(1, n - 1))}
+              disabled={linkLayers <= 1}
+              className={stepperButtonClass}
+              aria-label="Remove link layer"
+            >
+              −
+            </button>
+            <span className="font-mono tabular-nums text-[var(--pw-text-muted)] min-w-[1ch] text-center">
+              {linkLayers}
+            </span>
+            <button
+              type="button"
+              onClick={() => setLinkLayers((n) => Math.min(VAV_GRAPH_LIMITS.maxLinkLayers, n + 1))}
+              disabled={linkLayers >= VAV_GRAPH_LIMITS.maxLinkLayers}
+              className={stepperButtonClass}
+              aria-label="Add link layer"
+            >
+              +
+            </button>
+          </div>
 
-      <div className="flex flex-wrap items-center gap-4 text-sm">
-        <label className="flex items-center gap-2 text-[var(--pw-text-muted)]">
-          Min votes
-          <input
-            type="range"
-            min={0}
-            max={Math.min(lookup?.maxVotes ?? 500, 500)}
-            value={minVotes}
-            onChange={(e) => setMinVotes(parseInt(e.target.value, 10))}
-            className="w-32 accent-[var(--pw-vav-accent)]"
-          />
-          <span className="font-mono text-xs w-8">{minVotes}</span>
-        </label>
-        <div className="flex items-center gap-2 text-[var(--pw-text-muted)]">
-          <span>Link layers</span>
           <button
             type="button"
-            onClick={() => setLinkLayers((n) => Math.max(1, n - 1))}
-            disabled={linkLayers <= 1}
-            className="btn text-sm px-2.5 py-1 disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label="Remove link layer"
+            onClick={resetVav}
+            disabled={isAtDefault}
+            className="text-[var(--pw-text-faint)] hover:text-[var(--pw-text)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors sm:ml-auto"
+            aria-label="Reset to Genesis 1:1 and clear selected verses"
           >
-            −
+            Reset
           </button>
-          <span className="font-mono text-xs w-4 text-center tabular-nums">{linkLayers}</span>
-          <button
-            type="button"
-            onClick={() => setLinkLayers((n) => Math.min(VAV_GRAPH_LIMITS.maxLinkLayers, n + 1))}
-            disabled={linkLayers >= VAV_GRAPH_LIMITS.maxLinkLayers}
-            className="btn text-sm px-2.5 py-1 disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label="Add link layer"
-          >
-            +
-          </button>
-          <span className="text-[10px] text-[var(--pw-text-faint)] hidden sm:inline">
-            {linkLayers === 1
-              ? 'Direct cross-refs only'
-              : `Up to ${linkLayers} hops`}
-          </span>
         </div>
       </div>
 
@@ -157,57 +186,15 @@ export function CrossRefExplorer() {
         </p>
       )}
 
-      {selectionHistory.length > 0 && (
-        <div className="rounded-xl border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/40 px-4 py-3">
-          <div className="text-[10px] uppercase tracking-widest text-[var(--pw-vav-accent)] mb-2">
-            Selected scripture
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {selectionHistory.map((ref, index) => {
-              const vid = refToVid(ref);
-              const isCurrent = index === 0;
-              const color = vid != null ? verseColorVar(vid) : 'var(--pw-text)';
-              return (
-                <span
-                  key={`${ref}-${index}`}
-                  className={`inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border-2 transition-colors ${
-                    isCurrent ? 'shadow-sm' : 'opacity-70 hover:opacity-100 border'
-                  }`}
-                  style={{
-                    borderColor: color,
-                    ...(isCurrent ? { backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)` } : {}),
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => selectRef(ref)}
-                    className="text-sm font-medium"
-                    style={{ color }}
-                  >
-                    {ref}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeRef(ref)}
-                    className="text-[var(--pw-text-faint)] hover:text-[var(--pw-text)] text-sm leading-none opacity-50 hover:opacity-100"
-                    aria-label={`Remove ${ref}`}
-                  >
-                    ×
-                  </button>
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {graph && centerVid != null ? (
+      {isGraphLoading ? (
+        <VavLoadingState variant="graph" label="Building graph…" />
+      ) : graph && centerVid != null ? (
         <CrossRefGraph
           centerVid={centerVid}
           edges={graph.edges}
           maxVotes={graph.maxVotes ?? lookup?.maxVotes ?? 1}
-          minVotes={minVotes}
-          linkLayers={linkLayers}
+          minVotes={deferredMinVotes}
+          linkLayers={deferredLinkLayers}
           highlightVid={hoverVid}
           selectedVid={selectedVid}
           onHoverVid={setHoverVid}

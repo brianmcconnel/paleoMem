@@ -4,10 +4,14 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DeckGL from '@deck.gl/react';
 import { OrthographicView, type Layer, type PickingInfo } from '@deck.gl/core';
 import { LineLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
+import { VAV_GRAPH_SURFACE_HEIGHT } from '../vav/VavLoadingState';
+import { getCrossRefVerseText } from '../../lib/cross-ref-verse-text';
 import type { CrossRefEdge } from '../../lib/cross-refs';
 import {
+  applyVerseSpacingByDegreeAndZoom,
   buildEgoGraph,
   layoutForceGraph,
+  verseNodeRadius,
   type GraphLink,
   type LayoutNode,
 } from '../../lib/force-graph-layout';
@@ -34,7 +38,7 @@ const OT_GOLD: [number, number, number, number] = [197, 164, 110, 255];
 const NT_BLUE: [number, number, number, number] = [59, 130, 246, 255];
 const HIGHLIGHT: [number, number, number, number] = [255, 210, 90, 255];
 const BOOK_GREEN: [number, number, number, number] = [74, 222, 128, 255];
-const CHAPTER_TEAL: [number, number, number, number] = [45, 212, 160, 255];
+const CHAPTER_PURPLE: [number, number, number, number] = [167, 139, 250, 255];
 const LABEL_WHITE: [number, number, number, number] = [232, 238, 245, 255];
 
 const TEXT_FONT_SETTINGS = {
@@ -112,12 +116,45 @@ function verseBelongsToBook(verseVid: number, bookNum: number | null): boolean {
 function voteToWidth(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
   if (kind === 'book' || kind === 'chapter') return 1.1;
   if (maxVotes <= 0) return 1;
-  const base = kind === 'mesh' ? 0.8 : 1.5;
-  return base + (votes / maxVotes) * (kind === 'mesh' ? 3 : 8);
+  const base = kind === 'mesh' ? 0.7 : 1;
+  return base + (votes / maxVotes) * (kind === 'mesh' ? 2 : 4);
+}
+
+function lineTouchesCenter(line: LineDatum, centerVid: number): boolean {
+  if (line.kind !== 'primary' && line.kind !== 'mesh') return false;
+  return line.fromVid === centerVid || line.toVid === centerVid;
+}
+
+/** Narrower than visual width — deck.gl uses line width for hover hit-testing. */
+function linePickWidth(line: LineDatum, maxVotes: number): number {
+  return Math.max(1.5, voteToWidth(line.votes, maxVotes, line.kind) * 0.5);
+}
+
+function handleLineHover(
+  info: PickingInfo,
+  centerVid: number,
+  onHover: ((vid: number | null) => void) | undefined,
+): void {
+  if (!info.object) {
+    onHover?.(null);
+    return;
+  }
+  const line = info.object as LineDatum;
+  if (line.kind === 'book' || line.kind === 'chapter') {
+    onHover?.(line.toVid);
+    return;
+  }
+  onHover?.(
+    line.fromVid === centerVid
+      ? line.toVid
+      : line.toVid === centerVid
+        ? line.fromVid
+        : line.toVid,
+  );
 }
 
 function baseLineColor(kind: GraphLink['kind']): [number, number, number, number] {
-  if (kind === 'chapter') return [45, 212, 160, 110];
+  if (kind === 'chapter') return [167, 139, 250, 110];
   if (kind === 'book') return [74, 222, 128, 120];
   if (kind === 'mesh') return [120, 135, 160, 100];
   return [80, 150, 240, 170];
@@ -202,19 +239,19 @@ function lineIsActive(
 
 function lineColor(
   line: LineDatum,
-  activeLinkVid: number | null | undefined,
+  emphasizedLinkVid: number | null | undefined,
 ): [number, number, number, number] {
   const base = baseLineColor(line.kind);
-  if (activeLinkVid == null) return base;
+  if (emphasizedLinkVid == null) return base;
 
-  if (!lineIsActive(line, activeLinkVid)) {
+  if (!lineIsActive(line, emphasizedLinkVid)) {
     return [base[0], base[1], base[2], Math.round(base[3] * 0.12)];
   }
 
-  if (membershipLinkForVerse(line, activeLinkVid)) return [120, 255, 175, 255];
-  if (line.kind === 'chapter') return [80, 235, 185, 230];
+  if (membershipLinkForVerse(line, emphasizedLinkVid)) return [120, 255, 175, 255];
+  if (line.kind === 'chapter') return [180, 155, 255, 230];
   if (line.kind === 'book') return [74, 222, 128, 220];
-  if (lineConnectsVid(line, activeLinkVid)) {
+  if (lineConnectsVid(line, emphasizedLinkVid)) {
     if (line.kind === 'mesh') return [200, 215, 235, 220];
     return [255, 210, 90, 240];
   }
@@ -225,15 +262,21 @@ function lineColor(
 function lineWidth(
   line: LineDatum,
   maxVotes: number,
-  activeLinkVid: number | null | undefined,
+  emphasizedLinkVid: number | null | undefined,
+  centerVid: number,
 ): number {
   const base = voteToWidth(line.votes, maxVotes, line.kind);
-  if (activeLinkVid == null) return base;
-  if (!lineIsActive(line, activeLinkVid)) return Math.max(0.35, base * 0.4);
-  if (membershipLinkForVerse(line, activeLinkVid)) return 3.5;
+  if (emphasizedLinkVid == null) {
+    if (lineTouchesCenter(line, centerVid)) {
+      return Math.max(0.45, base * 0.42);
+    }
+    return base;
+  }
+  if (!lineIsActive(line, emphasizedLinkVid)) return Math.max(0.35, base * 0.4);
+  if (membershipLinkForVerse(line, emphasizedLinkVid)) return 3.5;
   if (line.kind === 'chapter') return 2.2;
   if (line.kind === 'book') return 2;
-  if (lineConnectsVid(line, activeLinkVid)) return base * 1.5 + 2;
+  if (lineConnectsVid(line, emphasizedLinkVid)) return base * 1.5 + 2;
   return base;
 }
 
@@ -286,7 +329,7 @@ function labelWhite(
 function nodeRadius(node: LayoutNode): number {
   if (node.kind === 'book') return 5 + Math.sqrt(node.degree) * 0.85;
   if (node.kind === 'chapter') return 4 + Math.sqrt(node.degree) * 0.75;
-  return 3 + Math.sqrt(node.degree) * 1.25;
+  return verseNodeRadius(node.degree);
 }
 
 function verseFillColor(
@@ -323,10 +366,51 @@ function chapterFillColor(
   crossRefLines: LineDatum[],
 ): [number, number, number, number] {
   if (highlightVid != null && !nodeIsActive(node, highlightVid, crossRefLines)) {
-    return [CHAPTER_TEAL[0], CHAPTER_TEAL[1], CHAPTER_TEAL[2], 45];
+    return [CHAPTER_PURPLE[0], CHAPTER_PURPLE[1], CHAPTER_PURPLE[2], 45];
   }
-  if (node.vid === highlightVid) return [CHAPTER_TEAL[0], CHAPTER_TEAL[1], CHAPTER_TEAL[2], 255];
-  return CHAPTER_TEAL;
+  if (node.vid === highlightVid) return [CHAPTER_PURPLE[0], CHAPTER_PURPLE[1], CHAPTER_PURPLE[2], 255];
+  return CHAPTER_PURPLE;
+}
+
+const VERSE_TOOLTIP_KJV_MAX = 220;
+
+function truncateKjv(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text;
+  const slice = text.slice(0, maxLen - 1);
+  const lastSpace = slice.lastIndexOf(' ');
+  const trimmed = lastSpace > maxLen * 0.55 ? slice.slice(0, lastSpace) : slice;
+  return `${trimmed.trimEnd()}…`;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function verseTooltipContent(vid: number, degree: number) {
+  const ref = vidToRef(vid);
+  const verseText = getCrossRefVerseText(ref);
+  const kjv = verseText?.kjv
+    ? escapeHtml(truncateKjv(verseText.kjv, VERSE_TOOLTIP_KJV_MAX))
+    : null;
+  const refHtml = escapeHtml(ref);
+  const linksHtml = `${degree} link${degree === 1 ? '' : 's'}`;
+
+  const scriptureBlock = kjv
+    ? `<p style="margin:0 0 6px;font-size:10px;line-height:1.45;color:#c5ccd6">${kjv}</p>`
+    : '';
+
+  return {
+    html: `<div style="max-width:260px"><strong style="display:block;margin-bottom:5px;font-size:11px;color:#e8eef5">${refHtml}</strong>${scriptureBlock}<span style="font-size:9px;color:#8b949e">${linksHtml}</span></div>`,
+    style: {
+      fontSize: '11px',
+      lineHeight: '1.45',
+      padding: '8px 10px',
+    } as Partial<CSSStyleDeclaration>,
+  };
 }
 
 function graphNodeLabel(vid: number, nodes: LayoutNode[]): string {
@@ -393,6 +477,20 @@ function buildLineData(
     .filter((row): row is LineDatum => row != null);
 }
 
+function useCoarsePointer(): boolean {
+  const [coarse, setCoarse] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)');
+    const update = () => setCoarse(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  return coarse;
+}
+
 export function CrossRefGraph({
   centerVid,
   edges,
@@ -410,6 +508,8 @@ export function CrossRefGraph({
     () => new Map(),
   );
   const [draggingBookVid, setDraggingBookVid] = useState<number | null>(null);
+  const coarsePointer = useCoarsePointer();
+  const verseTapMinPixels = coarsePointer ? 12 : 4;
 
   const onHoverRef = useRef(onHoverVid);
   const onSelectRef = useRef(onSelectVid);
@@ -437,7 +537,12 @@ export function CrossRefGraph({
   }, [graphKey]);
 
   const displayData = useMemo(() => {
-    const nodes = applyBookDragPositions(graphLayout.nodes, bookDragPositions);
+    const dragged = applyBookDragPositions(graphLayout.nodes, bookDragPositions);
+    const nodes = applyVerseSpacingByDegreeAndZoom(
+      dragged,
+      viewState.zoom,
+      graphLayout.zoom,
+    );
     const nodeMap = new Map(nodes.map((n) => [n.vid, n]));
     const lines = buildLineData(graphLayout.links, nodeMap);
     const verseNodes = nodes.filter((n) => n.kind === 'verse');
@@ -446,7 +551,7 @@ export function CrossRefGraph({
     const crossRefLines = lines.filter((l) => l.kind !== 'book' && l.kind !== 'chapter');
 
     return { nodes, verseNodes, bookNodes, chapterNodes, lines, crossRefLines };
-  }, [graphLayout, bookDragPositions]);
+  }, [graphLayout, bookDragPositions, viewState.zoom]);
 
   useEffect(() => {
     setViewState({ target: [0, 0, 0], zoom: graphLayout.zoom });
@@ -457,7 +562,7 @@ export function CrossRefGraph({
   }, [graphKey]);
 
   const { verseNodes, bookNodes, chapterNodes, lines, crossRefLines, nodes } = displayData;
-  const activeLinkVid = highlightVid ?? selectedVid ?? null;
+  const emphasizedLinkVid = highlightVid ?? null;
 
   const updateBookDrag = useCallback((info: PickingInfo) => {
     const node = info.object as LayoutNode | undefined;
@@ -476,39 +581,34 @@ export function CrossRefGraph({
       data: lines,
       getSourcePosition: (d) => d.source,
       getTargetPosition: (d) => d.target,
-      getWidth: (d) => lineWidth(d, maxVotes, activeLinkVid),
+      getWidth: (d) => lineWidth(d, maxVotes, emphasizedLinkVid, centerVid),
       widthUnits: 'pixels',
-      getColor: (d) => lineColor(d, activeLinkVid),
+      getColor: (d) => lineColor(d, emphasizedLinkVid),
       parameters: LAYER_PARAMETERS,
-      pickable: true,
+      pickable: false,
       updateTriggers: {
-        getColor: [activeLinkVid],
-        getWidth: [activeLinkVid],
+        getColor: [emphasizedLinkVid],
+        getWidth: [emphasizedLinkVid],
         getSourcePosition: [bookDragPositions],
         getTargetPosition: [bookDragPositions],
       },
-      onHover: (info) => {
-        if (!info.object) {
-          onHoverRef.current?.(null);
-          return;
-        }
-        const line = info.object as LineDatum;
-        if (line.kind === 'book') {
-          onHoverRef.current?.(line.toVid);
-          return;
-        }
-        if (line.kind === 'chapter') {
-          onHoverRef.current?.(line.toVid);
-          return;
-        }
-        onHoverRef.current?.(
-          line.fromVid === centerVid
-            ? line.toVid
-            : line.toVid === centerVid
-              ? line.fromVid
-              : line.toVid,
-        );
+    }),
+    new LineLayer<LineDatum>({
+      id: 'vav-edges-pick',
+      data: lines,
+      getSourcePosition: (d) => d.source,
+      getTargetPosition: (d) => d.target,
+      getWidth: (d) => linePickWidth(d, maxVotes),
+      widthUnits: 'pixels',
+      getColor: [0, 0, 0, 0],
+      parameters: LAYER_PARAMETERS,
+      pickable: true,
+      updateTriggers: {
+        getWidth: [maxVotes],
+        getSourcePosition: [bookDragPositions],
+        getTargetPosition: [bookDragPositions],
       },
+      onHover: (info) => handleLineHover(info, centerVid, onHoverRef.current),
     }),
     new ScatterplotLayer<LayoutNode>({
       id: 'vav-book-halo',
@@ -552,6 +652,7 @@ export function CrossRefGraph({
       onHover: (info) =>
         onHoverRef.current?.(info.object ? (info.object as LayoutNode).vid : null),
       onDragStart: (info) => {
+        if (coarsePointer) return false;
         const node = info.object as LayoutNode | undefined;
         if (node?.kind !== 'book') return false;
         setDraggingBookVid(node.vid);
@@ -559,10 +660,12 @@ export function CrossRefGraph({
         return true;
       },
       onDrag: (info) => {
+        if (coarsePointer) return false;
         updateBookDrag(info);
         return draggingBookVid != null;
       },
       onDragEnd: (info) => {
+        if (coarsePointer) return false;
         updateBookDrag(info);
         setDraggingBookVid(null);
         return true;
@@ -634,7 +737,7 @@ export function CrossRefGraph({
       lineWidthUnits: 'pixels',
       getLineWidth: () => 1.25,
       getFillColor: (d) => chapterFillColor(d, highlightVid, crossRefLines),
-      getLineColor: [16, 36, 32, 255],
+      getLineColor: [32, 24, 48, 255],
       parameters: LAYER_PARAMETERS,
       pickable: true,
       autoHighlight: true,
@@ -700,7 +803,7 @@ export function CrossRefGraph({
       getPosition: (d) => [d.x, d.y, 0],
       getRadius: (d) => nodeRadius(d),
       radiusUnits: 'pixels',
-      radiusMinPixels: 4,
+      radiusMinPixels: verseTapMinPixels,
       radiusMaxPixels: 18,
       filled: true,
       stroked: true,
@@ -714,7 +817,10 @@ export function CrossRefGraph({
       onHover: (info) =>
         onHoverRef.current?.(info.object ? (info.object as LayoutNode).vid : null),
       onClick: (info) => {
-        if (info.object) onSelectRef.current?.((info.object as LayoutNode).vid);
+        if (!info.object) return;
+        const vid = (info.object as LayoutNode).vid;
+        onHoverRef.current?.(vid);
+        onSelectRef.current?.(vid);
       },
       updateTriggers: {
         getFillColor: [highlightVid, selectedVid, crossRefLines.length],
@@ -781,7 +887,7 @@ export function CrossRefGraph({
         const bookName = node.bookNum ? bookNumToBookName(node.bookNum) : 'Book';
         return { text: `${bookName} ${node.chapterNum}\n${node.degree} verses in chapter` };
       }
-      return { text: `${vidToRef(node.vid)}\n${node.degree} links` };
+      return verseTooltipContent(node.vid, node.degree);
     },
     [bookNodes, chapterNodes],
   );
@@ -791,7 +897,9 @@ export function CrossRefGraph({
 
   if (webglError) {
     return (
-      <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field h-[500px] flex items-center justify-center p-6">
+      <div
+        className={`relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field ${VAV_GRAPH_SURFACE_HEIGHT} flex items-center justify-center p-6`}
+      >
         <p className="text-sm text-[var(--pw-text-muted)] text-center">
           WebGL graph unavailable: {webglError}
         </p>
@@ -800,12 +908,17 @@ export function CrossRefGraph({
   }
 
   return (
-    <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field">
-      <div className="absolute top-2 left-3 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] pointer-events-none">
-        Layer {linkLayers} · {verseNodes.length} verses · {chapterNodes.length} chapters ·{' '}
-        {bookNodes.length} books · {lines.length} edges · {tooltip}
+    <div
+      className={`relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field touch-none ${VAV_GRAPH_SURFACE_HEIGHT}`}
+    >
+      <div className="absolute top-2 left-2 right-2 sm:left-3 sm:right-auto z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] pointer-events-none truncate sm:whitespace-normal">
+        <span className="hidden sm:inline">
+          Layer {linkLayers} · {verseNodes.length} verses · {chapterNodes.length} chapters ·{' '}
+          {bookNodes.length} books · {lines.length} edges · {tooltip}
+        </span>
+        <span className="sm:hidden">{tooltip}</span>
       </div>
-      <div className="absolute bottom-2 left-3 z-10 flex flex-wrap gap-3 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
+      <div className="absolute bottom-2 left-2 right-2 sm:left-3 sm:right-auto z-10 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
         <span className="inline-flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-[var(--pw-accent-gold)] inline-block" /> Old Testament
         </span>
@@ -818,12 +931,15 @@ export function CrossRefGraph({
         <span className="inline-flex items-center gap-1.5">
           <span
             className="w-3 h-3 rounded-full inline-block"
-            style={{ backgroundColor: 'rgb(45, 212, 160)' }}
+            style={{ backgroundColor: 'rgb(167, 139, 250)' }}
           />{' '}
           Chapter hub
         </span>
-        <span className="text-[var(--pw-text-faint)]">
+        <span className="hidden sm:inline text-[var(--pw-text-faint)]">
           Scroll to zoom · drag canvas to pan · drag book hub to reposition · click verse to select
+        </span>
+        <span className="sm:hidden text-[var(--pw-text-faint)]">
+          Pinch to zoom · drag to pan · tap verse to select
         </span>
       </div>
 
@@ -842,7 +958,14 @@ export function CrossRefGraph({
           console.error('[Vav graph]', error);
           setWebglError((prev) => prev ?? error?.message ?? 'WebGL initialization failed');
         }}
-        style={{ width: '100%', height: '500px', position: 'relative', background: 'transparent' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          background: 'transparent',
+        }}
       />
     </div>
   );

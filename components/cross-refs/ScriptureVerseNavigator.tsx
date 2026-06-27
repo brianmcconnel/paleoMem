@@ -185,14 +185,17 @@ export function ScriptureVerseNavigator({ currentRef, onSelect }: ScriptureVerse
         ? `${pickerBook} — choose a chapter`
         : `${pickerBook} ${pickerChapter} — choose a verse`;
 
+  const navArrowClass =
+    'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[var(--pw-text-muted)] hover:bg-[var(--pw-bg-elevated)] hover:text-[var(--pw-text)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
+
   return (
     <div className="w-full space-y-2">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
           onClick={() => prevRef && onSelect(buildRef(prevRef.book, prevRef.chapter, prevRef.verse))}
           disabled={!prevRef}
-          className="btn text-sm px-2.5 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          className={navArrowClass}
           aria-label="Previous verse"
         >
           ←
@@ -201,14 +204,14 @@ export function ScriptureVerseNavigator({ currentRef, onSelect }: ScriptureVerse
         <button
           type="button"
           onClick={toggleExpanded}
-          className="flex-1 flex items-center justify-between bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] rounded-md px-3 py-1.5 text-sm font-medium text-[var(--pw-text)] hover:bg-[var(--pw-bg-elevated)] transition-colors"
+          className="flex-1 flex items-center justify-between gap-2 min-w-0 rounded-md border border-[var(--pw-border)] px-2.5 py-1.5 text-xs hover:bg-[var(--pw-bg-elevated)]/50 transition-colors"
           aria-expanded={isExpanded}
           aria-label="Open scripture selection"
         >
-          <span className="font-mono tracking-tight" style={{ color: accentVar }}>
+          <span className="font-mono tracking-tight truncate" style={{ color: accentVar }}>
             {currentRef}
           </span>
-          <span className="text-[10px] select-none" style={{ color: accentVar }}>
+          <span className="text-[10px] select-none shrink-0" style={{ color: accentVar }}>
             {isExpanded ? '−' : '+'}
           </span>
         </button>
@@ -217,7 +220,7 @@ export function ScriptureVerseNavigator({ currentRef, onSelect }: ScriptureVerse
           type="button"
           onClick={() => nextRef && onSelect(buildRef(nextRef.book, nextRef.chapter, nextRef.verse))}
           disabled={!nextRef}
-          className="btn text-sm px-2.5 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          className={navArrowClass}
           aria-label="Next verse"
         >
           →

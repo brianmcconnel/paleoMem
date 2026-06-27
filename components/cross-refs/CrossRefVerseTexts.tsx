@@ -1,8 +1,10 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
 import { getCrossRefVerseText } from '../../lib/cross-ref-verse-text';
 import { getKjvJesusMask } from '../../lib/red-letter';
+import { navigateToScriptureViewer, scriptureViewerForRef } from '../../lib/scripture-viewer-nav';
 import { refToVid, verseAccentColor } from '../../lib/verse-id';
 import { getGreekVerse } from '../../data/greek-nt';
 
@@ -36,7 +38,7 @@ function NtKjvText({ ref }: { ref: string }) {
   }, [verse]);
 
   return (
-    <p className="scripture-english text-[1.05rem] leading-relaxed text-[var(--pw-english)]">
+    <p className="scripture-english text-sm leading-relaxed text-[var(--pw-english)]">
       {parts.map((part) =>
         part.isJesus ? (
           <span key={part.key} className="text-[var(--pw-jesus)] font-medium">
@@ -51,6 +53,8 @@ function NtKjvText({ ref }: { ref: string }) {
 }
 
 export function CrossRefVerseTexts({ refs, selectedRef, onSelectRef, onRemoveRef }: CrossRefVerseTextsProps) {
+  const router = useRouter();
+
   const entries = useMemo(
     () =>
       refs
@@ -64,47 +68,37 @@ export function CrossRefVerseTexts({ refs, selectedRef, onSelectRef, onRemoveRef
   if (!entries.length) return null;
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--pw-vav-accent)]">
-        Selected verses
-      </h2>
-      <div className="space-y-3">
+    <section className="border-t border-[var(--pw-border)] pt-4">
+      <p className="text-[10px] text-[var(--pw-text-faint)] mb-2">Selected verses</p>
+      <ul className="divide-y divide-[var(--pw-border)]">
         {entries.map(({ ref, text }, index) => {
           const color = accentColor(ref);
-          const isSelected = ref === selectedRef;
-          const isNewest = index === 0;
+          const isCurrent = ref === selectedRef || index === 0;
+          const viewer = scriptureViewerForRef(ref);
 
           return (
-            <article
+            <li
               key={`${ref}-${index}`}
-              className={`card p-4 transition-colors ${
-                isSelected || isNewest ? 'ring-1' : 'opacity-90'
-              }`}
-              style={
-                isSelected || isNewest
-                  ? { borderColor: color, boxShadow: `0 0 0 1px color-mix(in srgb, ${color} 35%, transparent)` }
-                  : undefined
-              }
+              className={`py-3 first:pt-0 last:pb-0 border-l-2 pl-3 ${isCurrent ? '' : 'opacity-75'}`}
+              style={{ borderColor: isCurrent ? color : 'transparent' }}
             >
-              <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-1.5 min-w-0">
                 <button
                   type="button"
-                  onClick={() => onSelectRef?.(ref)}
-                  className="text-left min-w-0 flex-1"
+                  onClick={() => navigateToScriptureViewer(ref, router.push)}
+                  disabled={viewer == null}
+                  className="font-mono text-xs font-medium hover:underline underline-offset-2 truncate disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ color }}
+                  aria-label={
+                    viewer ? `Open ${ref} in ${viewer.app}` : `Cannot open ${ref} in scripture viewer`
+                  }
                 >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-mono text-sm font-semibold" style={{ color }}>
-                      {ref}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] shrink-0">
-                      KJV · {text.originalKind}
-                    </span>
-                  </div>
+                  {ref}
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemoveRef?.(ref)}
-                  className="shrink-0 text-[var(--pw-text-faint)] hover:text-[var(--pw-text)] text-sm leading-none opacity-50 hover:opacity-100 px-1"
+                  className="shrink-0 text-[var(--pw-text-faint)] hover:text-[var(--pw-text)] text-xs leading-none ml-auto"
                   aria-label={`Remove ${ref}`}
                 >
                   ×
@@ -113,54 +107,37 @@ export function CrossRefVerseTexts({ refs, selectedRef, onSelectRef, onRemoveRef
               <button
                 type="button"
                 onClick={() => onSelectRef?.(ref)}
-                className="text-left w-full space-y-3"
+                className="text-left w-full space-y-1.5 hover:opacity-90 transition-opacity"
               >
-
-                <div>
-                  <div className="text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] mb-1">
-                    King James Version
-                  </div>
-                  {text.testament === 'nt' ? (
-                    <NtKjvText ref={ref} />
-                  ) : (
-                    <p className="scripture-english text-[1.05rem] leading-relaxed text-[var(--pw-english)]">
-                      {text.kjv}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <div
-                    className="text-[10px] uppercase tracking-widest mb-1"
-                    style={{ color }}
+                {text.testament === 'nt' ? (
+                  <NtKjvText ref={ref} />
+                ) : (
+                  <p className="scripture-english text-sm leading-relaxed text-[var(--pw-english)]">
+                    {text.kjv}
+                  </p>
+                )}
+                {text.missingOriginal ? (
+                  <p className="text-xs text-[var(--pw-text-faint)]">{text.originalKind} unavailable</p>
+                ) : text.testament === 'ot' ? (
+                  <p
+                    className="scripture-hebrew text-base leading-relaxed text-[var(--pw-hebrew)]"
+                    dir="rtl"
                   >
-                    {text.originalKind}
-                  </div>
-                  {text.missingOriginal ? (
-                    <p className="text-sm text-[var(--pw-text-muted)]">
-                      {text.originalKind} text not loaded for this reference.
-                    </p>
-                  ) : text.testament === 'ot' ? (
-                    <p
-                      className="scripture-hebrew text-xl leading-relaxed text-[var(--pw-hebrew)]"
-                      dir="rtl"
-                    >
-                      {text.original}
-                    </p>
-                  ) : (
-                    <p
-                      className="scripture-greek text-xl leading-relaxed text-[var(--pw-greek)]"
-                      dir="ltr"
-                    >
-                      {text.original}
-                    </p>
-                  )}
-                </div>
+                    {text.original}
+                  </p>
+                ) : (
+                  <p
+                    className="scripture-greek text-base leading-relaxed text-[var(--pw-greek)]"
+                    dir="ltr"
+                  >
+                    {text.original}
+                  </p>
+                )}
               </button>
-            </article>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }
