@@ -2,9 +2,10 @@
 
 import React, { useMemo } from 'react';
 import DeckGL from '@deck.gl/react';
-import { ArcLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { OrthographicView } from '@deck.gl/core';
+import { LineLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import type { CrossRefEdge } from '../../lib/cross-refs';
-import { vidToPosition } from '../../lib/verse-layout';
+import { buildEgoGraph, layoutForceGraph, type GraphLink, type LayoutNode } from '../../lib/force-graph-layout';
 import { vidToRef } from '../../lib/verse-id';
 
 interface CrossRefGraphProps {
@@ -15,32 +16,40 @@ interface CrossRefGraphProps {
   onHoverVid?: (vid: number | null) => void;
 }
 
-type NodeDatum = {
-  vid: number;
-  position: [number, number];
-  isCenter: boolean;
-  degree: number;
-};
-
-type ArcDatum = {
+type LineDatum = {
   source: [number, number];
   target: [number, number];
   votes: number;
   fromVid: number;
   toVid: number;
+  kind: GraphLink['kind'];
 };
 
-function voteToWidth(votes: number, maxVotes: number): number {
+const ORTHO_VIEW = new OrthographicView({ id: 'ortho' });
+
+function voteToWidth(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
   if (maxVotes <= 0) return 1;
-  return 1 + (votes / maxVotes) * 12;
+  const base = kind === 'mesh' ? 0.6 : 1;
+  return base + (votes / maxVotes) * (kind === 'mesh' ? 4 : 10);
 }
 
-function voteToColor(votes: number, maxVotes: number): [number, number, number, number] {
+function voteToColor(
+  votes: number,
+  maxVotes: number,
+  kind: GraphLink['kind'],
+): [number, number, number, number] {
   const t = maxVotes > 0 ? votes / maxVotes : 0;
-  const r = Math.round(180 + t * 75);
-  const g = Math.round(90 + t * 40);
-  const b = Math.round(220 - t * 120);
-  return [r, g, b, Math.round(120 + t * 135)];
+  if (kind === 'mesh') {
+    return [90, 110, 150, Math.round(50 + t * 80)];
+  }
+  const r = Math.round(160 + t * 95);
+  const g = Math.round(100 + t * 60);
+  const b = Math.round(210 - t * 100);
+  return [r, g, b, Math.round(140 + t * 115)];
+}
+
+function nodeRadius(node: LayoutNode): number {
+  return (node.isCenter ? 16 : 8) + Math.sqrt(node.degree) * 3 + Math.sqrt(node.weight) * 0.15;
 }
 
 export function CrossRefGraph({
@@ -50,112 +59,141 @@ export function CrossRefGraph({
   highlightVid,
   onHoverVid,
 }: CrossRefGraphProps) {
-  const { nodes, arcs } = useMemo(() => {
-    const nodeMap = new Map<number, NodeDatum>();
-    const addNode = (vid: number, isCenter = false) => {
-      const existing = nodeMap.get(vid);
-      if (existing) {
-        if (isCenter) existing.isCenter = true;
-        return;
-      }
-      nodeMap.set(vid, {
-        vid,
-        position: vidToPosition(vid),
-        isCenter,
-        degree: 0,
-      });
-    };
+  const { nodes, lines, zoom } = useMemo(() => {
+    const graph = buildEgoGraph(centerVid, edges);
+    const laidOut = layoutForceGraph(graph.nodes, graph.links, centerVid, maxVotes);
+    const nodeMap = new Map(laidOut.map((n) => [n.vid, n]));
 
-    addNode(centerVid, true);
-    const arcData: ArcDatum[] = [];
+    const lineData: LineDatum[] = graph.links
+      .map((link) => {
+        const from = nodeMap.get(link.fromVid);
+        const to = nodeMap.get(link.toVid);
+        if (!from || !to) return null;
+        return {
+          source: [from.x, from.y] as [number, number],
+          target: [to.x, to.y] as [number, number],
+          votes: link.votes,
+          fromVid: link.fromVid,
+          toVid: link.toVid,
+          kind: link.kind,
+        };
+      })
+      .filter((row): row is LineDatum => row != null);
 
-    for (const edge of edges) {
-      addNode(edge.fromVid);
-      addNode(edge.toVid);
-      const from = nodeMap.get(edge.fromVid)!;
-      const to = nodeMap.get(edge.toVid)!;
-      from.degree += 1;
-      to.degree += 1;
-      arcData.push({
-        source: from.position,
-        target: to.position,
-        votes: edge.votes,
-        fromVid: edge.fromVid,
-        toVid: edge.toVid,
-      });
+    let maxCoord = 1;
+    for (const node of laidOut) {
+      maxCoord = Math.max(maxCoord, Math.abs(node.x), Math.abs(node.y));
     }
+    const zoom = Math.log2(520 / maxCoord) - 1;
 
-    return { nodes: [...nodeMap.values()], arcs: arcData };
-  }, [centerVid, edges]);
+    return { nodes: laidOut, lines: lineData, zoom };
+  }, [centerVid, edges, maxVotes]);
 
-  const nodeLayer = new ScatterplotLayer<NodeDatum>({
-    id: 'cross-ref-nodes',
-    data: nodes,
-    getPosition: (d) => d.position,
-    getRadius: (d) => (d.isCenter ? 140 : 60 + d.degree * 15),
-    getFillColor: (d) => {
-      if (d.vid === highlightVid) return [255, 210, 90, 255];
-      if (d.isCenter) return [197, 164, 110, 255];
-      return [100, 140, 200, 200];
-    },
-    pickable: true,
-    radiusMinPixels: 4,
-    radiusMaxPixels: 14,
-    onHover: (info) => onHoverVid?.(info.object ? (info.object as NodeDatum).vid : null),
-  });
-
-  const arcLayer = new ArcLayer<ArcDatum>({
-    id: 'cross-ref-arcs',
-    data: arcs,
+  const lineLayer = new LineLayer<LineDatum>({
+    id: 'cross-ref-edges',
+    data: lines,
     getSourcePosition: (d) => d.source,
     getTargetPosition: (d) => d.target,
-    getWidth: (d) => voteToWidth(d.votes, maxVotes),
-    getSourceColor: (d) => voteToColor(d.votes, maxVotes),
-    getTargetColor: (d) => voteToColor(d.votes, maxVotes),
+    getWidth: (d) => voteToWidth(d.votes, maxVotes, d.kind),
+    widthUnits: 'pixels',
+    getColor: (d) => voteToColor(d.votes, maxVotes, d.kind),
     pickable: true,
-    greatCircle: true,
+    autoHighlight: true,
+    highlightColor: [255, 220, 120, 255],
     onHover: (info) => {
       if (!info.object) {
         onHoverVid?.(null);
         return;
       }
-      const arc = info.object as ArcDatum;
-      onHoverVid?.(arc.toVid === centerVid ? arc.fromVid : arc.toVid);
+      const line = info.object as LineDatum;
+      onHoverVid?.(
+        line.fromVid === centerVid
+          ? line.toVid
+          : line.toVid === centerVid
+            ? line.fromVid
+            : line.toVid,
+      );
     },
   });
 
-  const tooltip = highlightVid
-    ? vidToRef(highlightVid)
-    : vidToRef(centerVid);
+  const nodeLayer = new ScatterplotLayer<LayoutNode>({
+    id: 'cross-ref-nodes',
+    data: nodes,
+    getPosition: (d) => [d.x, d.y],
+    getRadius: (d) => nodeRadius(d),
+    radiusUnits: 'pixels',
+    getFillColor: (d) => {
+      if (d.vid === highlightVid) return [255, 210, 90, 255];
+      if (d.isCenter) return [197, 164, 110, 255];
+      const t = Math.min(1, d.degree / 6);
+      return [
+        Math.round(80 + t * 60),
+        Math.round(130 + t * 40),
+        Math.round(200 - t * 30),
+        230,
+      ];
+    },
+    getLineColor: [30, 40, 55, 200],
+    lineWidthUnits: 'pixels',
+    getLineWidth: (d) => (d.isCenter ? 2 : 1),
+    stroked: true,
+    pickable: true,
+    onHover: (info) => onHoverVid?.(info.object ? (info.object as LayoutNode).vid : null),
+  });
+
+  const labelLayer = new TextLayer<LayoutNode>({
+    id: 'cross-ref-labels',
+    data: nodes.filter((n) => n.isCenter || n.degree >= 3 || n.vid === highlightVid),
+    getPosition: (d) => [d.x, d.y + nodeRadius(d) + 6],
+    getText: (d) => vidToRef(d.vid),
+    getSize: (d) => (d.isCenter ? 13 : 10),
+    getColor: (d) =>
+      d.vid === highlightVid ? [255, 220, 140, 255] : [200, 210, 225, 220],
+    getTextAnchor: 'middle',
+    getAlignmentBaseline: 'top',
+    fontFamily: 'system-ui, sans-serif',
+    outlineWidth: 2,
+    outlineColor: [11, 17, 24, 200],
+    pickable: false,
+  });
+
+  const tooltip = highlightVid ? vidToRef(highlightVid) : vidToRef(centerVid);
 
   return (
     <div className="relative rounded-xl border border-[var(--pw-border)] bg-[var(--pw-bg-surface)] overflow-hidden">
       <div className="absolute top-2 left-3 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] pointer-events-none">
-        Arc width = TSK vote strength · {tooltip}
+        Force layout · edge weight = TSK votes · node size = connections · {tooltip}
+      </div>
+      <div className="absolute bottom-2 left-3 z-10 flex gap-3 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-0.5 bg-[var(--pw-accent-gold)] inline-block" /> Primary link
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-0.5 bg-[var(--pw-text-subtle)] inline-block opacity-60" /> Neighbor mesh
+        </span>
       </div>
       <DeckGL
+        views={ORTHO_VIEW}
         initialViewState={{
-          longitude: 0,
-          latitude: 0,
-          zoom: 1.2,
-          pitch: 0,
-          bearing: 0,
+          target: [0, 0, 0],
+          zoom,
         }}
-        controller
-        layers={[arcLayer, nodeLayer]}
-        views={undefined}
+        controller={{ scrollZoom: true, dragPan: true, dragRotate: false }}
+        layers={[lineLayer, nodeLayer, labelLayer]}
         getTooltip={({ object }) => {
           if (!object) return null;
-          if ('votes' in (object as ArcDatum)) {
-            const arc = object as ArcDatum;
+          if ('votes' in (object as LineDatum)) {
+            const line = object as LineDatum;
             return {
-              text: `${vidToRef(arc.fromVid)} → ${vidToRef(arc.toVid)}\nVotes: ${arc.votes}`,
+              text: `${vidToRef(line.fromVid)} ↔ ${vidToRef(line.toVid)}\nVotes: ${line.votes}${line.kind === 'mesh' ? ' (shared neighbor)' : ''}`,
             };
           }
-          const node = object as NodeDatum;
-          return { text: vidToRef(node.vid) };
+          const node = object as LayoutNode;
+          return {
+            text: `${vidToRef(node.vid)}\n${node.degree} connections · ${Math.round(node.weight)} vote weight`,
+          };
         }}
-        style={{ width: '100%', height: '420px', background: 'transparent' }}
+        style={{ width: '100%', height: '480px', background: 'transparent' }}
       />
     </div>
   );

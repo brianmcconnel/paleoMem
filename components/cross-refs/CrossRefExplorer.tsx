@@ -119,7 +119,8 @@ export function CrossRefExplorer() {
           >
             OpenBible.info
           </a>{' '}
-          (CC BY 4.0). Thicker arcs and higher vote counts indicate stronger thematic connections.
+          (CC BY 4.0). Nodes are laid out by a force simulation — stronger links pull verses
+          closer, and highly connected verses repel to form natural clusters.
         </p>
         {meta && (
           <p className="text-[10px] text-[var(--pw-text-faint)] mt-2">

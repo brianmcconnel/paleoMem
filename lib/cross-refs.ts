@@ -115,3 +115,16 @@ export function edgesForGraph(
 export function formatCrossRefEdge(edge: CrossRefEdge): string {
   return `${vidToRef(edge.fromVid)} → ${vidToRef(edge.toVid)} (${edge.votes})`;
 }
+
+/** Direct TSK vote count between two verses (either direction), if present. */
+export function getDirectLinkVotes(a: number, b: number): number | null {
+  ensureLoaded();
+  const out = outIndex[String(a)]?.find(([to]) => to === b)?.[1];
+  if (out) return out;
+  const incoming = inIndex[String(b)]?.find(([from]) => from === a)?.[1];
+  if (incoming) return incoming;
+  const reverse = outIndex[String(b)]?.find(([to]) => to === a)?.[1];
+  if (reverse) return reverse;
+  const reverseIn = inIndex[String(a)]?.find(([from]) => from === b)?.[1];
+  return reverseIn ?? null;
+}
