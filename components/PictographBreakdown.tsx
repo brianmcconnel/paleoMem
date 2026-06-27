@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { LetterGrid } from './LetterGrid';
 import { parseWord, ParsedWord } from '../lib/pictograph';
 import { InterlinearWord, ScriptureVerse } from '../data/verses';
+import { useUserSettings } from './UserSettingsContext';
 
 interface PictographBreakdownProps {
   verse: ScriptureVerse;
@@ -16,7 +17,7 @@ export function PictographBreakdown({
   selectedInterlinearWord,
   selectedLetter,
 }: PictographBreakdownProps) {
-  const [showEmojis, setShowEmojis] = useState(true);
+  const { showEmojis } = useUserSettings();
 
   // Parse the selected interlinear word's Hebrew for pictographs
   const selectedParsed: ParsedWord | null = React.useMemo(() => {
@@ -33,22 +34,11 @@ export function PictographBreakdown({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-semibold text-lg tracking-tight">Pictographic Breakdown</div>
-          <div className="text-sm text-[var(--pw-text-muted)]">
-            Letter-by-letter Paleo-Hebrew meanings linked to Strong’s
-          </div>
+      <div>
+        <div className="font-semibold text-lg tracking-tight">Pictographic Breakdown</div>
+        <div className="text-sm text-[var(--pw-text-muted)]">
+          Letter-by-letter Paleo-Hebrew meanings linked to Strong’s
         </div>
-
-        <label className="toggle text-sm">
-          <input
-            type="checkbox"
-            checked={showEmojis}
-            onChange={e => setShowEmojis(e.target.checked)}
-          />
-          <span>Show emojis</span>
-        </label>
       </div>
 
       {activeParsed && (

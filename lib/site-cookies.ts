@@ -5,10 +5,13 @@ const RTL_HELP_MINIMIZED_COOKIE = 'paleomem_rtl_help_minimized';
 const THEME_COOKIE = 'paleomem_theme';
 const HEBREW_FONT_COOKIE = 'paleomem_hebrew_font';
 const PWA_INSTALL_DISMISSED_COOKIE = 'paleomem_pwa_install_dismissed';
+const SHOW_EMOJIS_COOKIE = 'paleomem_show_emojis';
+const VERSE_ON_VISIT_COOKIE = 'paleomem_verse_on_visit';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
 export type ThemeMode = 'dark' | 'light';
 export type HebrewFontMode = 'modern' | 'paleo';
+export type VerseOnVisitMode = 'last' | 'random';
 
 function cookiePath(): string {
   if (typeof window === 'undefined') return '/';
@@ -90,6 +93,26 @@ export function isPwaInstallDismissed(): boolean {
 
 export function dismissPwaInstall(): void {
   setCookie(PWA_INSTALL_DISMISSED_COOKIE, '1');
+}
+
+/** Show pictograph emojis in interlinear letter cards — defaults to on. */
+export function getShowEmojis(): boolean {
+  const value = getCookie(SHOW_EMOJIS_COOKIE);
+  if (value === '0') return false;
+  return true;
+}
+
+export function setShowEmojis(show: boolean): void {
+  setCookie(SHOW_EMOJIS_COOKIE, show ? '1' : '0');
+}
+
+/** Which verse to open on a fresh visit — resume last or pick at random. */
+export function getVerseOnVisit(): VerseOnVisitMode {
+  return getCookie(VERSE_ON_VISIT_COOKIE) === 'random' ? 'random' : 'last';
+}
+
+export function setVerseOnVisit(mode: VerseOnVisitMode): void {
+  setCookie(VERSE_ON_VISIT_COOKIE, mode);
 }
 
 /** Inline script: apply saved theme and Hebrew font before first paint (attributes only — no inline styles). */

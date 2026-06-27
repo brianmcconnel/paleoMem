@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Noto_Sans_Hebrew, Noto_Serif_Hebrew } from 'next/font/google';
 import { HelpGuide } from '../components/HelpGuide';
+import { InlineScript } from '../components/InlineScript';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { PwaRegister } from '../components/PwaRegister';
 import { PwaUpdatePrompt } from '../components/PwaUpdatePrompt';
 import { ReadingHelpProvider } from '../components/ReadingHelpContext';
 import { HebrewFontProvider } from '../components/HebrewFontContext';
 import { ThemeProvider } from '../components/ThemeContext';
+import { UserSettingsProvider } from '../components/UserSettingsContext';
 import { pwaUrl } from '../lib/pwa';
 import { THEME_BOOTSTRAP_SCRIPT } from '../lib/site-cookies';
 import './globals.css';
@@ -89,7 +91,7 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+Greek:wght@400;500;700&display=swap"
         />
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+        <InlineScript html={THEME_BOOTSTRAP_SCRIPT} />
       </head>
       <body
         className="min-h-full flex flex-col bg-[var(--pw-bg-app)] text-[var(--pw-text)]"
@@ -99,12 +101,14 @@ export default function RootLayout({
         <PwaInstallPrompt />
         <PwaUpdatePrompt />
         <ThemeProvider>
-          <HebrewFontProvider>
-            <ReadingHelpProvider>
-              {children}
-              <HelpGuide />
-            </ReadingHelpProvider>
-          </HebrewFontProvider>
+          <UserSettingsProvider>
+            <HebrewFontProvider>
+              <ReadingHelpProvider>
+                {children}
+                <HelpGuide />
+              </ReadingHelpProvider>
+            </HebrewFontProvider>
+          </UserSettingsProvider>
         </ThemeProvider>
       </body>
     </html>

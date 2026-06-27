@@ -12,7 +12,8 @@ import { HebrewReaderPanel } from '../components/HebrewReaderPanel';
 import { normalizeReference, parseRef } from '../data/books';
 import { getVerse, DEFAULT_VERSE, InterlinearWord } from '../data/verses';
 import { getAramaicScope, isWordAramaic } from '../lib/aramaic';
-import { getLastVerse, setLastVerse } from '../lib/site-cookies';
+import { getLastVerse, getVerseOnVisit, setLastVerse } from '../lib/site-cookies';
+import { getRandomOtVerseRef } from '../data/verses';
 import { HebrewGraphemeText } from '../components/HebrewGraphemeText';
 import { useHebrewFont } from '../components/HebrewFontContext';
 
@@ -24,11 +25,15 @@ export default function paleoMemPage() {
   const { font: hebrewFont } = useHebrewFont();
 
   useEffect(() => {
-    const saved = getLastVerse();
-    if (saved) {
-      const normalized = normalizeReference(saved);
-      if (getVerse(normalized)) {
-        setCurrentRef(normalized);
+    if (getVerseOnVisit() === 'random') {
+      setCurrentRef(getRandomOtVerseRef());
+    } else {
+      const saved = getLastVerse();
+      if (saved) {
+        const normalized = normalizeReference(saved);
+        if (getVerse(normalized)) {
+          setCurrentRef(normalized);
+        }
       }
     }
     setVerseReady(true);

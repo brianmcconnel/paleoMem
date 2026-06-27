@@ -15,7 +15,9 @@ import { GreekReaderPanel } from '../../components/koine/GreekReaderPanel';
 import { GreekInterlinear } from '../../components/koine/GreekInterlinear';
 import { KoineFaq } from '../../components/koine/KoineFaq';
 import { KoineSources } from '../../components/koine/KoineSources';
+import { getRandomKoineVerseRef } from '../../data/greek-nt';
 import { getLastKoineVerse, setLastKoineVerse } from '../../lib/koine-cookies';
+import { getVerseOnVisit } from '../../lib/site-cookies';
 import { isJesusGreekWord } from '../../lib/red-letter';
 
 export default function KoineHydataPage() {
@@ -24,11 +26,15 @@ export default function KoineHydataPage() {
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
 
   useEffect(() => {
-    const saved = getLastKoineVerse();
-    if (saved) {
-      const normalized = normalizeNtReference(saved);
-      if (getGreekVerse(normalized)) {
-        setCurrentRef(normalized);
+    if (getVerseOnVisit() === 'random') {
+      setCurrentRef(getRandomKoineVerseRef());
+    } else {
+      const saved = getLastKoineVerse();
+      if (saved) {
+        const normalized = normalizeNtReference(saved);
+        if (getGreekVerse(normalized)) {
+          setCurrentRef(normalized);
+        }
       }
     }
     setVerseReady(true);
@@ -62,18 +68,6 @@ export default function KoineHydataPage() {
       <KoineHeader />
 
       <main className="flex-1 max-w-6xl mx-auto px-6 py-4 sm:py-5 w-full">
-        <div className="mb-4 rounded-xl border border-[var(--pw-border)] bg-[var(--pw-bg-elevated)]/40 px-4 py-3 text-sm text-[var(--pw-text-soft)] leading-relaxed">
-          <p>
-            <span className="font-medium text-[var(--pw-text)]">koineHydata</span> parallels{' '}
-            <Link href="/" className="text-[var(--pw-link)] hover:underline">
-              paleoMem
-            </Link>{' '}
-            for the New Testament: KJV English beside{' '}
-            <span className="font-medium text-[var(--pw-text-soft)]">Koine Greek</span> (SBLGNT),
-            with per-word Strong&apos;s and etymology insights. Click any Greek word for its insight.
-          </p>
-        </div>
-
         <div
           id="reader"
           className="sticky top-12 z-30 -mx-6 px-6 pt-2 pb-3 mb-3 bg-[var(--pw-bg-app)] border-b border-[var(--pw-border)] shadow-[0_8px_32px_var(--pw-shadow)] max-h-[min(55vh,560px)] overflow-y-auto"

@@ -1,5 +1,5 @@
 /* paleoMem service worker — install + offline caching */
-const CACHE = 'paleomem-v6';
+const CACHE = 'paleomem-v7';
 const BASE = '/paleoMem';
 
 function isHtmlRequest(request) {
@@ -40,6 +40,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   if (!url.pathname.startsWith(BASE)) return;
+
+  // Never cache Next.js build chunks — Turbopack uses stable names in dev,
+  // so cache-first here serves stale JS long after source changes.
+  if (url.pathname.includes('/_next/')) return;
 
   if (isHtmlRequest(event.request)) {
     event.respondWith(networkFirst(event.request));

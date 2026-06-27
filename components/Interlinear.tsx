@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { InterlinearWord } from '../data/verses';
 import { getBlueLetterBibleUrl, parseWord } from '../lib/pictograph';
 import { isWordAramaic } from '../lib/aramaic';
@@ -12,6 +12,7 @@ import {
 } from '../lib/strongs';
 import { HebrewRtlNote } from './HebrewRtlHint';
 import { LetterCard } from './LetterCard';
+import { useUserSettings } from './UserSettingsContext';
 
 interface InterlinearProps {
   book: string;
@@ -34,7 +35,7 @@ export function Interlinear({
   onSelect,
   onLetterClick,
 }: InterlinearProps) {
-  const [showEmojis, setShowEmojis] = useState(true);
+  const { showEmojis } = useUserSettings();
   const selectedLetterRef = useRef<HTMLButtonElement>(null);
 
   const parsedWords = useMemo(
@@ -107,24 +108,14 @@ export function Interlinear({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
-            Interlinear Hebrew + Strong’s + Pictographs
-          </div>
-          <HebrewRtlNote />
-          <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
-            Each row: Strong’s card first, then letter pictographs for that word.
-          </div>
+      <div>
+        <div className="text-sm font-medium tracking-widest uppercase text-[var(--pw-text-muted)]">
+          Interlinear Hebrew + Strong’s + Pictographs
         </div>
-        <label className="toggle text-sm shrink-0">
-          <input
-            type="checkbox"
-            checked={showEmojis}
-            onChange={(e) => setShowEmojis(e.target.checked)}
-          />
-          <span>Show emojis</span>
-        </label>
+        <HebrewRtlNote />
+        <div className="text-[10px] text-[var(--pw-text-faint)] mt-1">
+          Each row: Strong’s card first, then letter pictographs for that word.
+        </div>
       </div>
 
       <div className="space-y-4">

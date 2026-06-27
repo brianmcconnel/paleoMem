@@ -1,18 +1,9 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { scrollToSection } from '../lib/scroll-section';
-import { HebrewFontToggle } from './HebrewFontToggle';
-import { ThemeToggle } from './ThemeToggle';
+import { AppMenu } from './AppMenu';
 
 export function Header() {
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    scrollToSection(id);
-    window.history.replaceState(null, '', `#${id}`);
-  };
-
   return (
     <header className="h-12 shrink-0 border-b border-[var(--pw-border)] bg-[var(--pw-bg-app)] sticky top-0 z-50">
       <div className="h-full max-w-6xl mx-auto px-6 flex items-center justify-between">
@@ -28,48 +19,7 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex items-center gap-2 sm:gap-3 text-sm shrink-0">
-          <HebrewFontToggle />
-          <ThemeToggle />
-          <Link
-            href="/koine"
-            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
-          >
-            koineHydata
-          </Link>
-          <a
-            href="#insights"
-            onClick={(e) => handleNavClick(e, 'insights')}
-            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
-          >
-            Insights
-          </a>
-          <a
-            href="#faq"
-            onClick={(e) => handleNavClick(e, 'faq')}
-            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
-          >
-            FAQ
-          </a>
-          <a
-            href="#datasources"
-            onClick={(e) => handleNavClick(e, 'datasources')}
-            className="hover:text-[var(--pw-accent-gold)] transition-colors hidden sm:inline"
-          >
-            Sources
-          </a>
-          <a
-            href="https://github.com/brianmcconnel/paleoMem"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--pw-text-muted)] hover:text-[var(--pw-text)] hidden md:inline"
-          >
-            GitHub
-          </a>
-          <div className="text-[var(--pw-text-faint)] text-[10px] px-2 py-0.5 rounded bg-[var(--pw-bg-surface)] border border-[var(--pw-border)] hidden sm:block">
-            OT
-          </div>
-        </nav>
+        <AppMenu variant="paleo" />
       </div>
     </header>
   );
