@@ -3,6 +3,7 @@ import {
   forceCollide,
   forceLink,
   forceManyBody,
+  forceRadial,
   forceSimulation,
   type SimulationLinkDatum,
   type SimulationNodeDatum,
@@ -131,12 +132,6 @@ export function layoutForceGraph(
     }))
     .filter((l) => l.source && l.target);
 
-  const center = nodeByVid.get(centerVid);
-  if (center) {
-    center.fx = 0;
-    center.fy = 0;
-  }
-
   const simulation = forceSimulation(simNodes)
     .force(
       'link',
@@ -157,12 +152,20 @@ export function layoutForceGraph(
         .strength((node) => -90 - node.degree * 28 - node.weight * 0.08)
         .distanceMax(420),
     )
-    .force('center', forceCenter(0, 0).strength(0.04))
+    .force('center', forceCenter(0, 0).strength(0.06))
+    .force(
+      'radial',
+      forceRadial<SimNode>(
+        (node) => (node.isCenter ? 0 : 130 + Math.min(node.degree, 10) * 14),
+        0,
+        0,
+      ).strength((node) => (node.isCenter ? 0.9 : 0.45)),
+    )
     .force(
       'collide',
       forceCollide<SimNode>()
-        .radius((node) => 10 + Math.sqrt(node.degree) * 5 + (node.isCenter ? 8 : 0))
-        .strength(0.85),
+        .radius((node) => 14 + Math.sqrt(node.degree) * 6 + (node.isCenter ? 10 : 0))
+        .strength(0.9),
     )
     .stop();
 

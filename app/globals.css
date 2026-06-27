@@ -315,6 +315,19 @@ html[data-theme='dark'] body {
 }
 
 /* Whole Hebrew word highlight (from KJV click) */
+/* Cross-reference graph — subtle field grid behind deck.gl canvas */
+.cross-ref-graph-field {
+  background-color: var(--pw-bg-surface);
+  background-image:
+    radial-gradient(ellipse 80% 70% at 50% 50%, var(--pw-bg-panel) 0%, transparent 70%),
+    linear-gradient(var(--pw-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--pw-border) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    48px 48px,
+    48px 48px;
+}
+
 .word-in-passage {
   text-decoration: underline;
   text-decoration-color: var(--pw-accent-gold);

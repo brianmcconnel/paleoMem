@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import DeckGL from '@deck.gl/react';
-import { OrthographicView } from '@deck.gl/core';
-import { LineLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
+import React, { useMemo, useState } from 'react';
 import type { CrossRefEdge } from '../../lib/cross-refs';
-import { buildEgoGraph, layoutForceGraph, type GraphLink, type LayoutNode } from '../../lib/force-graph-layout';
+import {
+  buildEgoGraph,
+  layoutForceGraph,
+  type GraphLink,
+  type LayoutNode,
+} from '../../lib/force-graph-layout';
 import { vidToRef } from '../../lib/verse-id';
 
 interface CrossRefGraphProps {
@@ -17,39 +19,50 @@ interface CrossRefGraphProps {
 }
 
 type LineDatum = {
-  source: [number, number];
-  target: [number, number];
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
   votes: number;
   fromVid: number;
   toVid: number;
   kind: GraphLink['kind'];
 };
 
-const ORTHO_VIEW = new OrthographicView({ id: 'ortho' });
-
 function voteToWidth(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
   if (maxVotes <= 0) return 1;
-  const base = kind === 'mesh' ? 0.6 : 1;
-  return base + (votes / maxVotes) * (kind === 'mesh' ? 4 : 10);
+  const base = kind === 'mesh' ? 0.6 : 1.2;
+  return base + (votes / maxVotes) * (kind === 'mesh' ? 2.5 : 5);
 }
 
-function voteToColor(
-  votes: number,
-  maxVotes: number,
-  kind: GraphLink['kind'],
-): [number, number, number, number] {
+function voteToOpacity(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
   const t = maxVotes > 0 ? votes / maxVotes : 0;
-  if (kind === 'mesh') {
-    return [90, 110, 150, Math.round(50 + t * 80)];
-  }
-  const r = Math.round(160 + t * 95);
-  const g = Math.round(100 + t * 60);
-  const b = Math.round(210 - t * 100);
-  return [r, g, b, Math.round(140 + t * 115)];
+  return kind === 'mesh' ? 0.25 + t * 0.35 : 0.45 + t * 0.5;
 }
 
 function nodeRadius(node: LayoutNode): number {
-  return (node.isCenter ? 16 : 8) + Math.sqrt(node.degree) * 3 + Math.sqrt(node.weight) * 0.15;
+  return (node.isCenter ? 18 : 10) + Math.sqrt(node.degree) * 3;
+}
+
+function computeBounds(nodes: LayoutNode[]) {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const node of nodes) {
+    const pad = nodeRadius(node) + 36;
+    minX = Math.min(minX, node.x - pad);
+    maxX = Math.max(maxX, node.x + pad);
+    minY = Math.min(minY, node.y - pad);
+    maxY = Math.max(maxY, node.y + pad);
+  }
+  const pad = 24;
+  return {
+    minX: minX - pad,
+    minY: minY - pad,
+    width: maxX - minX + pad * 2,
+    height: maxY - minY + pad * 2,
+  };
 }
 
 export function CrossRefGraph({
@@ -59,19 +72,23 @@ export function CrossRefGraph({
   highlightVid,
   onHoverVid,
 }: CrossRefGraphProps) {
-  const { nodes, lines, zoom } = useMemo(() => {
-    const graph = buildEgoGraph(centerVid, edges);
-    const laidOut = layoutForceGraph(graph.nodes, graph.links, centerVid, maxVotes);
-    const nodeMap = new Map(laidOut.map((n) => [n.vid, n]));
+  const [hoveredVid, setHoveredVid] = useState<number | null>(null);
 
-    const lineData: LineDatum[] = graph.links
+  const graphData = useMemo(() => {
+    const graph = buildEgoGraph(centerVid, edges);
+    const nodes = layoutForceGraph(graph.nodes, graph.links, centerVid, maxVotes);
+    const nodeMap = new Map(nodes.map((n) => [n.vid, n]));
+
+    const lines: LineDatum[] = graph.links
       .map((link) => {
         const from = nodeMap.get(link.fromVid);
         const to = nodeMap.get(link.toVid);
         if (!from || !to) return null;
         return {
-          source: [from.x, from.y] as [number, number],
-          target: [to.x, to.y] as [number, number],
+          x1: from.x,
+          y1: from.y,
+          x2: to.x,
+          y2: to.y,
           votes: link.votes,
           fromVid: link.fromVid,
           toVid: link.toVid,
@@ -80,121 +97,128 @@ export function CrossRefGraph({
       })
       .filter((row): row is LineDatum => row != null);
 
-    let maxCoord = 1;
-    for (const node of laidOut) {
-      maxCoord = Math.max(maxCoord, Math.abs(node.x), Math.abs(node.y));
-    }
-    const zoom = Math.log2(520 / maxCoord) - 1;
-
-    return { nodes: laidOut, lines: lineData, zoom };
+    return { nodes, lines, bounds: computeBounds(nodes) };
   }, [centerVid, edges, maxVotes]);
 
-  const lineLayer = new LineLayer<LineDatum>({
-    id: 'cross-ref-edges',
-    data: lines,
-    getSourcePosition: (d) => d.source,
-    getTargetPosition: (d) => d.target,
-    getWidth: (d) => voteToWidth(d.votes, maxVotes, d.kind),
-    widthUnits: 'pixels',
-    getColor: (d) => voteToColor(d.votes, maxVotes, d.kind),
-    pickable: true,
-    autoHighlight: true,
-    highlightColor: [255, 220, 120, 255],
-    onHover: (info) => {
-      if (!info.object) {
-        onHoverVid?.(null);
-        return;
-      }
-      const line = info.object as LineDatum;
-      onHoverVid?.(
-        line.fromVid === centerVid
-          ? line.toVid
-          : line.toVid === centerVid
-            ? line.fromVid
-            : line.toVid,
-      );
-    },
-  });
+  const activeVid = highlightVid ?? hoveredVid;
+  const tooltip = activeVid ? vidToRef(activeVid) : vidToRef(centerVid);
 
-  const nodeLayer = new ScatterplotLayer<LayoutNode>({
-    id: 'cross-ref-nodes',
-    data: nodes,
-    getPosition: (d) => [d.x, d.y],
-    getRadius: (d) => nodeRadius(d),
-    radiusUnits: 'pixels',
-    getFillColor: (d) => {
-      if (d.vid === highlightVid) return [255, 210, 90, 255];
-      if (d.isCenter) return [197, 164, 110, 255];
-      const t = Math.min(1, d.degree / 6);
-      return [
-        Math.round(80 + t * 60),
-        Math.round(130 + t * 40),
-        Math.round(200 - t * 30),
-        230,
-      ];
-    },
-    getLineColor: [30, 40, 55, 200],
-    lineWidthUnits: 'pixels',
-    getLineWidth: (d) => (d.isCenter ? 2 : 1),
-    stroked: true,
-    pickable: true,
-    onHover: (info) => onHoverVid?.(info.object ? (info.object as LayoutNode).vid : null),
-  });
+  const handleNodeHover = (vid: number | null) => {
+    setHoveredVid(vid);
+    onHoverVid?.(vid);
+  };
 
-  const labelLayer = new TextLayer<LayoutNode>({
-    id: 'cross-ref-labels',
-    data: nodes.filter((n) => n.isCenter || n.degree >= 3 || n.vid === highlightVid),
-    getPosition: (d) => [d.x, d.y + nodeRadius(d) + 6],
-    getText: (d) => vidToRef(d.vid),
-    getSize: (d) => (d.isCenter ? 13 : 10),
-    getColor: (d) =>
-      d.vid === highlightVid ? [255, 220, 140, 255] : [200, 210, 225, 220],
-    getTextAnchor: 'middle',
-    getAlignmentBaseline: 'top',
-    fontFamily: 'system-ui, sans-serif',
-    outlineWidth: 2,
-    outlineColor: [11, 17, 24, 200],
-    pickable: false,
-  });
-
-  const tooltip = highlightVid ? vidToRef(highlightVid) : vidToRef(centerVid);
+  const { bounds } = graphData;
 
   return (
-    <div className="relative rounded-xl border border-[var(--pw-border)] bg-[var(--pw-bg-surface)] overflow-hidden">
+    <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden cross-ref-graph-field">
       <div className="absolute top-2 left-3 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] pointer-events-none">
-        Force layout · edge weight = TSK votes · node size = connections · {tooltip}
+        Force layout · {graphData.nodes.length} nodes · {graphData.lines.length} edges · {tooltip}
       </div>
       <div className="absolute bottom-2 left-3 z-10 flex gap-3 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
-        <span className="inline-flex items-center gap-1">
-          <span className="w-3 h-0.5 bg-[var(--pw-accent-gold)] inline-block" /> Primary link
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-[var(--pw-accent-gold)] inline-block" /> Verse node
         </span>
-        <span className="inline-flex items-center gap-1">
-          <span className="w-3 h-0.5 bg-[var(--pw-text-subtle)] inline-block opacity-60" /> Neighbor mesh
+        <span className="inline-flex items-center gap-1.5">
+          <span className="w-3 h-0.5 bg-[var(--pw-accent)] inline-block" /> TSK link (thicker = stronger)
         </span>
       </div>
-      <DeckGL
-        views={ORTHO_VIEW}
-        initialViewState={{
-          target: [0, 0, 0],
-          zoom,
-        }}
-        controller={{ scrollZoom: true, dragPan: true, dragRotate: false }}
-        layers={[lineLayer, nodeLayer, labelLayer]}
-        getTooltip={({ object }) => {
-          if (!object) return null;
-          if ('votes' in (object as LineDatum)) {
-            const line = object as LineDatum;
-            return {
-              text: `${vidToRef(line.fromVid)} ↔ ${vidToRef(line.toVid)}\nVotes: ${line.votes}${line.kind === 'mesh' ? ' (shared neighbor)' : ''}`,
-            };
-          }
-          const node = object as LayoutNode;
-          return {
-            text: `${vidToRef(node.vid)}\n${node.degree} connections · ${Math.round(node.weight)} vote weight`,
-          };
-        }}
-        style={{ width: '100%', height: '480px', background: 'transparent' }}
-      />
+
+      <svg
+        viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
+        className="w-full h-[500px] block"
+        role="img"
+        aria-label={`Cross-reference graph for ${vidToRef(centerVid)}`}
+      >
+        <defs>
+          <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {graphData.lines.map((line) => (
+          <line
+            key={`${line.fromVid}-${line.toVid}-${line.kind}`}
+            x1={line.x1}
+            y1={line.y1}
+            x2={line.x2}
+            y2={line.y2}
+            stroke={line.kind === 'mesh' ? 'var(--pw-text-subtle)' : 'var(--pw-accent)'}
+            strokeOpacity={voteToOpacity(line.votes, maxVotes, line.kind)}
+            strokeWidth={voteToWidth(line.votes, maxVotes, line.kind)}
+            strokeLinecap="round"
+          />
+        ))}
+
+        {graphData.nodes.map((node) => {
+          const r = nodeRadius(node);
+          const isActive = node.vid === activeVid;
+          const isCenter = node.isCenter;
+          const fill = isActive
+            ? 'var(--pw-accent-gold)'
+            : isCenter
+              ? 'var(--pw-accent-gold)'
+              : 'var(--pw-accent)';
+          const label = vidToRef(node.vid);
+
+          return (
+            <g
+              key={node.vid}
+              className="cursor-pointer"
+              onMouseEnter={() => handleNodeHover(node.vid)}
+              onMouseLeave={() => handleNodeHover(null)}
+              onFocus={() => handleNodeHover(node.vid)}
+              onBlur={() => handleNodeHover(null)}
+              filter={isActive || isCenter ? 'url(#node-glow)' : undefined}
+            >
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={r + 6}
+                fill={fill}
+                opacity={0.2}
+              />
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={r}
+                fill={fill}
+                stroke="var(--pw-text)"
+                strokeOpacity={0.85}
+                strokeWidth={isCenter ? 2.5 : 1.5}
+              />
+              <text
+                x={node.x}
+                y={node.y - r - 8}
+                textAnchor="middle"
+                fill="var(--pw-text-soft)"
+                fontSize={isCenter ? 13 : 10}
+                fontWeight={isCenter ? 700 : 500}
+                fontFamily="system-ui, sans-serif"
+              >
+                {label}
+              </text>
+              {isCenter && (
+                <text
+                  x={node.x}
+                  y={node.y + 4}
+                  textAnchor="middle"
+                  fill="var(--pw-on-gold)"
+                  fontSize={9}
+                  fontWeight={700}
+                  fontFamily="system-ui, sans-serif"
+                >
+                  ●
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
