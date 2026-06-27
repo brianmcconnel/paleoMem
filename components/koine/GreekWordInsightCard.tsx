@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
+import { useUserSettings } from '../UserSettingsContext';
 import { getGreekWordInsight } from '../../lib/greek-insights';
 import { isJesusGreekWord } from '../../lib/red-letter';
 import { getBlueLetterBibleUrl } from '../../lib/pictograph';
@@ -12,8 +13,9 @@ interface GreekWordInsightCardProps {
 }
 
 export function GreekWordInsightCard({ word, compact = false }: GreekWordInsightCardProps) {
+  const { ntRedLetter } = useUserSettings();
   const insight = getGreekWordInsight(word);
-  const isJesus = isJesusGreekWord(word);
+  const isJesus = isJesusGreekWord(word, ntRedLetter);
 
   return (
     <div

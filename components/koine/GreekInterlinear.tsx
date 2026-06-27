@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import type { GreekInterlinearWord } from '../../data/greek-nt';
+import { useUserSettings } from '../UserSettingsContext';
 import { getBlueLetterBibleUrl } from '../../lib/pictograph';
 import { getStrongs, getStrongsDisplay } from '../../lib/strongs';
 import { isJesusGreekWord } from '../../lib/red-letter';
@@ -14,6 +15,7 @@ interface GreekInterlinearProps {
 }
 
 export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterlinearProps) {
+  const { ntRedLetter } = useUserSettings();
   const selectedRowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export function GreekInterlinear({ words, selectedId, onSelect }: GreekInterline
       <div className="space-y-4">
         {words.map((word) => {
           const isSelected = selectedId === word.id;
-          const isJesus = isJesusGreekWord(word);
+          const isJesus = isJesusGreekWord(word, ntRedLetter);
           const strongsDisplay = getStrongsDisplay(word.strongs);
           const pronunciation =
             strongsDisplay.pronunciation || word.transliteration || '';

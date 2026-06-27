@@ -7,6 +7,7 @@ const THEME_COOKIE = 'paleomem_theme';
 const HEBREW_FONT_COOKIE = 'paleomem_hebrew_font';
 const PWA_INSTALL_DISMISSED_COOKIE = 'paleomem_pwa_install_dismissed';
 const SHOW_EMOJIS_COOKIE = 'paleomem_show_emojis';
+const NT_RED_LETTER_COOKIE = 'paleomem_nt_red_letter';
 const VERSE_ON_VISIT_COOKIE = 'paleomem_verse_on_visit';
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
@@ -113,6 +114,15 @@ export function getShowEmojis(): boolean {
 
 export function setShowEmojis(show: boolean): void {
   setCookie(SHOW_EMOJIS_COOKIE, show ? '1' : '0');
+}
+
+/** Highlight words of Jesus in NT KJV and Greek — experimental; defaults to off. */
+export function getNtRedLetter(): boolean {
+  return getCookie(NT_RED_LETTER_COOKIE) === '1';
+}
+
+export function setNtRedLetter(enabled: boolean): void {
+  setCookie(NT_RED_LETTER_COOKIE, enabled ? '1' : '0');
 }
 
 /** Which verse to open on a fresh visit — resume last or pick at random. */

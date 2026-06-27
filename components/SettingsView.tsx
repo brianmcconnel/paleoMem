@@ -12,7 +12,7 @@ function SettingRow({
   description,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   description: string;
   children: React.ReactNode;
 }) {
@@ -69,8 +69,15 @@ function SegmentedControl<T extends string>({
 export function SettingsView() {
   const { theme, setThemeMode } = useTheme();
   const { font: hebrewFont, setFontMode } = useHebrewFont();
-  const { ready, showEmojis, setShowEmojisEnabled, verseOnVisit, setVerseOnVisitMode } =
-    useUserSettings();
+  const {
+    ready,
+    showEmojis,
+    setShowEmojisEnabled,
+    ntRedLetter,
+    setNtRedLetterEnabled,
+    verseOnVisit,
+    setVerseOnVisitMode,
+  } = useUserSettings();
 
   if (!ready) {
     return (
@@ -129,6 +136,27 @@ export function SettingsView() {
               onChange={(e) => setShowEmojisEnabled(e.target.checked)}
             />
             <span>{showEmojis ? 'On' : 'Off'}</span>
+          </label>
+        </SettingRow>
+
+        <SettingRow
+          title={
+            <span className="inline-flex items-center gap-2 flex-wrap">
+              <span>Red letter (NT)</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--pw-vav-accent)] px-1.5 py-0.5 rounded border border-[var(--pw-vav-accent)]/40">
+                Experimental
+              </span>
+            </span>
+          }
+          description="Highlight the words of Jesus in New Testament KJV and Greek (koineHydata and Vav). Off by default."
+        >
+          <label className="toggle text-sm">
+            <input
+              type="checkbox"
+              checked={ntRedLetter}
+              onChange={(e) => setNtRedLetterEnabled(e.target.checked)}
+            />
+            <span>{ntRedLetter ? 'On' : 'Off'}</span>
           </label>
         </SettingRow>
 

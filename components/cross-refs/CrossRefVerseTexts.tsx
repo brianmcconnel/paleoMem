@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useMemo } from 'react';
+import { useUserSettings } from '../UserSettingsContext';
 import { getCrossRefVerseText } from '../../lib/cross-ref-verse-text';
 import { getKjvJesusMask } from '../../lib/red-letter';
 import { navigateToScriptureViewer, scriptureViewerForRef } from '../../lib/scripture-viewer-nav';
@@ -22,12 +23,13 @@ function accentColor(ref: string): string {
 }
 
 function NtKjvText({ ref }: { ref: string }) {
+  const { ntRedLetter } = useUserSettings();
   const verse = getGreekVerse(ref);
   if (!verse) return null;
 
   const parts = useMemo(() => {
     const tokens = verse.kjv.match(/\S+|\s+/g) ?? [verse.kjv];
-    const wordMask = getKjvJesusMask(verse);
+    const wordMask = getKjvJesusMask(verse, ntRedLetter);
     let wordIndex = 0;
 
     return tokens.map((token, index) => {
@@ -35,7 +37,7 @@ function NtKjvText({ ref }: { ref: string }) {
       const isJesus = isWord ? wordMask[wordIndex++] === true : false;
       return { key: index, token, isJesus };
     });
-  }, [verse]);
+  }, [verse, ntRedLetter]);
 
   return (
     <p className="scripture-english text-sm leading-relaxed text-[var(--pw-english)]">

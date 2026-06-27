@@ -2,8 +2,10 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
+  getNtRedLetter,
   getShowEmojis,
   getVerseOnVisit,
+  setNtRedLetter,
   setShowEmojis,
   setVerseOnVisit,
   type VerseOnVisitMode,
@@ -13,6 +15,8 @@ type UserSettingsContextValue = {
   ready: boolean;
   showEmojis: boolean;
   setShowEmojisEnabled: (show: boolean) => void;
+  ntRedLetter: boolean;
+  setNtRedLetterEnabled: (enabled: boolean) => void;
   verseOnVisit: VerseOnVisitMode;
   setVerseOnVisitMode: (mode: VerseOnVisitMode) => void;
 };
@@ -21,6 +25,8 @@ const UserSettingsContext = createContext<UserSettingsContextValue>({
   ready: false,
   showEmojis: true,
   setShowEmojisEnabled: () => {},
+  ntRedLetter: false,
+  setNtRedLetterEnabled: () => {},
   verseOnVisit: 'last',
   setVerseOnVisitMode: () => {},
 });
@@ -28,10 +34,12 @@ const UserSettingsContext = createContext<UserSettingsContextValue>({
 export function UserSettingsProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [showEmojis, setShowEmojisState] = useState(true);
+  const [ntRedLetter, setNtRedLetterState] = useState(false);
   const [verseOnVisit, setVerseOnVisitState] = useState<VerseOnVisitMode>('last');
 
   useEffect(() => {
     setShowEmojisState(getShowEmojis());
+    setNtRedLetterState(getNtRedLetter());
     setVerseOnVisitState(getVerseOnVisit());
     setReady(true);
   }, []);
@@ -41,6 +49,11 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     setShowEmojisState(show);
   };
 
+  const setNtRedLetterEnabled = (enabled: boolean) => {
+    setNtRedLetter(enabled);
+    setNtRedLetterState(enabled);
+  };
+
   const setVerseOnVisitMode = (mode: VerseOnVisitMode) => {
     setVerseOnVisit(mode);
     setVerseOnVisitState(mode);
@@ -48,7 +61,15 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
 
   return (
     <UserSettingsContext.Provider
-      value={{ ready, showEmojis, setShowEmojisEnabled, verseOnVisit, setVerseOnVisitMode }}
+      value={{
+        ready,
+        showEmojis,
+        setShowEmojisEnabled,
+        ntRedLetter,
+        setNtRedLetterEnabled,
+        verseOnVisit,
+        setVerseOnVisitMode,
+      }}
     >
       {children}
     </UserSettingsContext.Provider>

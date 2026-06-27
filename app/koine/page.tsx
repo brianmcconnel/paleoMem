@@ -19,8 +19,10 @@ import { getRandomKoineVerseRef } from '../../data/greek-nt';
 import { getLastKoineVerse, setLastKoineVerse } from '../../lib/koine-cookies';
 import { getVerseOnVisit } from '../../lib/site-cookies';
 import { isJesusGreekWord } from '../../lib/red-letter';
+import { useUserSettings } from '../../components/UserSettingsContext';
 
 export default function KoineHydataPage() {
+  const { ntRedLetter } = useUserSettings();
   const [currentRef, setCurrentRef] = useState<string>(DEFAULT_KOINE_VERSE.ref);
   const [verseReady, setVerseReady] = useState(false);
   const [selectedWordId, setSelectedWordId] = useState<number | null>(null);
@@ -97,7 +99,7 @@ export default function KoineHydataPage() {
               >
                 {displayVerse.words.map((word, wi) => {
                   const isSelected = selectedWordId === word.id;
-                  const isJesus = isJesusGreekWord(word);
+                  const isJesus = isJesusGreekWord(word, ntRedLetter);
                   return (
                     <span key={word.id}>
                       <button

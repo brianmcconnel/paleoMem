@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import type { GreekScriptureVerse } from '../../data/greek-nt';
+import { useUserSettings } from '../UserSettingsContext';
 import { getBlueLetterBibleVerseUrl } from '../../lib/blueletterbible';
 import { getKjvJesusMask } from '../../lib/red-letter';
 
@@ -10,11 +11,12 @@ interface GreekVerseDisplayProps {
 }
 
 export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
+  const { ntRedLetter } = useUserSettings();
   const blbUrl = getBlueLetterBibleVerseUrl(verse.book, verse.chapter, verse.verse);
 
   const kjvParts = useMemo(() => {
     const tokens = verse.kjv.match(/\S+|\s+/g) ?? [verse.kjv];
-    const wordMask = getKjvJesusMask(verse);
+    const wordMask = getKjvJesusMask(verse, ntRedLetter);
     let wordIndex = 0;
 
     return tokens.map((token, index) => {
@@ -22,7 +24,7 @@ export function GreekVerseDisplay({ verse }: GreekVerseDisplayProps) {
       const isJesus = isWord ? wordMask[wordIndex++] === true : false;
       return { key: index, token, isJesus, isWord };
     });
-  }, [verse]);
+  }, [verse, ntRedLetter]);
 
   return (
     <div className="card p-3">
