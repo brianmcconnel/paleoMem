@@ -36,6 +36,10 @@ html[data-theme='dark'] {
   --pw-accent-gold: #c5a46e;
   --pw-accent-gold-hover: #d8b97f;
   --pw-on-gold: #0b1118;
+  --pw-vav-accent: #8fb8d9;
+  --pw-vav-mark-from: #c5a46e;
+  --pw-vav-mark-to: #3b82f6;
+  --pw-on-vav-mark: #0b1118;
   --pw-link: #8ab4ff;
 
   /* Scripture specific */
@@ -80,6 +84,10 @@ html[data-theme='light'] {
   --pw-accent-gold: #a37d44;
   --pw-accent-gold-hover: #b38d54;
   --pw-on-gold: #1a2533;
+  --pw-vav-accent: #4b7ab8;
+  --pw-vav-mark-from: #a37d44;
+  --pw-vav-mark-to: #2563eb;
+  --pw-on-vav-mark: #ffffff;
   --pw-link: #2563eb;
 
   --pw-hebrew: #1f2937;
@@ -315,14 +323,40 @@ html[data-theme='dark'] body {
 }
 
 /* Whole Hebrew word highlight (from KJV click) */
-/* Cross-reference graph — subtle field grid behind deck.gl canvas */
+/* Vav — OT/NT bridge accent */
+.vav-mark {
+  background: linear-gradient(135deg, var(--pw-vav-mark-from), var(--pw-vav-mark-to));
+  color: var(--pw-on-vav-mark);
+}
+
+.vav-title {
+  background: linear-gradient(90deg, var(--pw-accent-gold), var(--pw-vav-accent) 55%, var(--pw-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vav-page .btn-gold {
+  background: linear-gradient(135deg, var(--pw-accent-gold), var(--pw-vav-accent));
+  border-color: var(--pw-vav-accent);
+  color: var(--pw-on-vav-mark);
+}
+
+.vav-page .btn-gold:hover {
+  filter: brightness(1.08);
+}
+
+/* Vav graph — subtle field grid; gold/blue radial bridge */
+.vav-graph-field,
 .cross-ref-graph-field {
   background-color: var(--pw-bg-surface);
   background-image:
-    radial-gradient(ellipse 80% 70% at 50% 50%, var(--pw-bg-panel) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 30% 45%, color-mix(in srgb, var(--pw-accent-gold) 8%, transparent), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 70% 55%, color-mix(in srgb, var(--pw-accent) 8%, transparent), transparent 70%),
     linear-gradient(var(--pw-border) 1px, transparent 1px),
     linear-gradient(90deg, var(--pw-border) 1px, transparent 1px);
   background-size:
+    100% 100%,
     100% 100%,
     48px 48px,
     48px 48px;

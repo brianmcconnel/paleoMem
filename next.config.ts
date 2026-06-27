@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   output: 'export',
   basePath: '/paleoMem',
   assetPrefix: '/paleoMem/',
+  transpilePackages: ['@deck.gl/react', '@deck.gl/core', '@deck.gl/layers'],
   images: {
     unoptimized: true,
   },

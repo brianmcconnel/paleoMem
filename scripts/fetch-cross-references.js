@@ -11,8 +11,6 @@ const DATA_DIR = path.join(__dirname, '../data');
 const OUT_JSON_PATH = path.join(DATA_DIR, 'cross-refs-out.json');
 const IN_JSON_PATH = path.join(DATA_DIR, 'cross-refs-in.json');
 const META_JSON_PATH = path.join(DATA_DIR, 'cross-refs-meta.json');
-const TOP_N = 25;
-
 async function ensureSourceFile() {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   if (!fs.existsSync(TXT_PATH)) {
@@ -75,19 +73,19 @@ async function main() {
   const topOutgoing = {};
   const topIncoming = {};
 
-  const toTopPairs = (targetMap) => {
+  const toSortedPairs = (targetMap) => {
     const sorted = [...targetMap.entries()].sort((a, b) => b[1] - a[1]);
     if (sorted[0] && sorted[0][1] > maxVotes) maxVotes = sorted[0][1];
-    return sorted.slice(0, TOP_N).map(([vid, votes]) => [vid, votes]);
+    return sorted.map(([vid, votes]) => [vid, votes]);
   };
 
   for (const [fromVid, targetMap] of bySource.entries()) {
     edgeCount += targetMap.size;
-    topOutgoing[String(fromVid)] = toTopPairs(targetMap);
+    topOutgoing[String(fromVid)] = toSortedPairs(targetMap);
   }
 
   for (const [toVid, sourceMap] of byTarget.entries()) {
-    topIncoming[String(toVid)] = toTopPairs(sourceMap);
+    topIncoming[String(toVid)] = toSortedPairs(sourceMap);
   }
 
   const meta = {
@@ -97,7 +95,6 @@ async function main() {
     edgeCount,
     sourceVerseCount: bySource.size,
     maxVotes,
-    topN: TOP_N,
   };
 
   fs.writeFileSync(OUT_JSON_PATH, JSON.stringify(topOutgoing));

@@ -1,28 +1,19 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import React from 'react';
-import { Header } from '../../components/Header';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-const CrossRefExplorer = dynamic(
-  () =>
-    import('../../components/cross-refs/CrossRefExplorer').then((m) => m.CrossRefExplorer),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="card p-6 text-sm text-[var(--pw-text-muted)]">Loading cross-references…</div>
-    ),
-  },
-);
+/** @deprecated Use /vav */
+export default function CrossRefsRedirectPage() {
+  const router = useRouter();
 
-export default function CrossRefsPage() {
+  useEffect(() => {
+    router.replace('/vav');
+  }, [router]);
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-
-      <main className="flex-1 max-w-5xl mx-auto px-6 py-6 sm:py-8 w-full">
-        <CrossRefExplorer />
-      </main>
+    <div className="min-h-screen flex items-center justify-center text-sm text-[var(--pw-text-muted)]">
+      Redirecting to Vav…
     </div>
   );
 }

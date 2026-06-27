@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import DeckGL from '@deck.gl/react';
+import { OrthographicView, type Layer, type PickingInfo } from '@deck.gl/core';
+import { LineLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { CrossRefEdge } from '../../lib/cross-refs';
 import {
   buildEgoGraph,
@@ -8,21 +11,44 @@ import {
   type GraphLink,
   type LayoutNode,
 } from '../../lib/force-graph-layout';
-import { vidToRef } from '../../lib/verse-id';
+import { verseAccentColor, vidToRef } from '../../lib/verse-id';
+
+const OT_GOLD: [number, number, number, number] = [197, 164, 110, 255];
+const NT_BLUE: [number, number, number, number] = [59, 130, 246, 255];
+const HIGHLIGHT: [number, number, number, number] = [255, 210, 90, 255];
+
+const ORTHO_VIEW = new OrthographicView({
+  id: 'ortho',
+  flipY: false,
+  near: -1000,
+  far: 1000,
+});
+
+const LAYER_PARAMETERS = {
+  depthWriteEnabled: false,
+  depthCompare: 'always' as const,
+};
+
+type ViewState = {
+  target: [number, number, number];
+  zoom: number;
+};
 
 interface CrossRefGraphProps {
   centerVid: number;
   edges: CrossRefEdge[];
   maxVotes: number;
+  minVotes?: number;
+  linkLayers?: number;
   highlightVid?: number | null;
+  selectedVid?: number | null;
   onHoverVid?: (vid: number | null) => void;
+  onSelectVid?: (vid: number) => void;
 }
 
 type LineDatum = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+  source: [number, number];
+  target: [number, number];
   votes: number;
   fromVid: number;
   toVid: number;
@@ -31,51 +57,103 @@ type LineDatum = {
 
 function voteToWidth(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
   if (maxVotes <= 0) return 1;
-  const base = kind === 'mesh' ? 0.6 : 1.2;
-  return base + (votes / maxVotes) * (kind === 'mesh' ? 2.5 : 5);
+  const base = kind === 'mesh' ? 0.8 : 1.5;
+  return base + (votes / maxVotes) * (kind === 'mesh' ? 3 : 8);
 }
 
-function voteToOpacity(votes: number, maxVotes: number, kind: GraphLink['kind']): number {
-  const t = maxVotes > 0 ? votes / maxVotes : 0;
-  return kind === 'mesh' ? 0.25 + t * 0.35 : 0.45 + t * 0.5;
+function baseLineColor(kind: GraphLink['kind']): [number, number, number, number] {
+  if (kind === 'mesh') return [120, 135, 160, 100];
+  return [80, 150, 240, 170];
 }
 
-function nodeRadius(node: LayoutNode): number {
-  return (node.isCenter ? 18 : 10) + Math.sqrt(node.degree) * 3;
+function lineConnectsVid(line: LineDatum, vid: number | null | undefined): boolean {
+  if (vid == null) return false;
+  return line.fromVid === vid || line.toVid === vid;
 }
 
-function computeBounds(nodes: LayoutNode[]) {
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-  for (const node of nodes) {
-    const pad = nodeRadius(node) + 36;
-    minX = Math.min(minX, node.x - pad);
-    maxX = Math.max(maxX, node.x + pad);
-    minY = Math.min(minY, node.y - pad);
-    maxY = Math.max(maxY, node.y + pad);
+function lineColor(
+  line: LineDatum,
+  highlightVid: number | null | undefined,
+): [number, number, number, number] {
+  const base = baseLineColor(line.kind);
+  if (highlightVid == null) return base;
+
+  if (lineConnectsVid(line, highlightVid)) {
+    if (line.kind === 'mesh') return [200, 215, 235, 220];
+    return [255, 210, 90, 240];
   }
-  const pad = 24;
-  return {
-    minX: minX - pad,
-    minY: minY - pad,
-    width: maxX - minX + pad * 2,
-    height: maxY - minY + pad * 2,
-  };
+
+  return [base[0], base[1], base[2], Math.round(base[3] * 0.12)];
+}
+
+function lineWidth(
+  line: LineDatum,
+  maxVotes: number,
+  highlightVid: number | null | undefined,
+): number {
+  const base = voteToWidth(line.votes, maxVotes, line.kind);
+  if (highlightVid == null) return base;
+  if (lineConnectsVid(line, highlightVid)) return base * 1.5 + 2;
+  return Math.max(0.4, base * 0.45);
+}
+
+function nodeIsLinkedTo(
+  nodeVid: number,
+  highlightVid: number | null | undefined,
+  graphLines: LineDatum[],
+): boolean {
+  if (highlightVid == null) return true;
+  if (nodeVid === highlightVid) return true;
+  return graphLines.some(
+    (line) =>
+      (line.fromVid === highlightVid && line.toVid === nodeVid) ||
+      (line.toVid === highlightVid && line.fromVid === nodeVid),
+  );
+}
+
+/** Pixel radius scales with link count (degree); ~50% of prior sizes. */
+function nodeRadius(node: LayoutNode): number {
+  return 3 + Math.sqrt(node.degree) * 1.25;
+}
+
+function nodeFillColor(
+  node: LayoutNode,
+  highlightVid: number | null | undefined,
+  selectedVid: number | null | undefined,
+  graphLines: LineDatum[],
+): [number, number, number, number] {
+  if (node.vid === highlightVid || node.vid === selectedVid) return HIGHLIGHT;
+
+  const base = verseAccentColor(node.vid) === 'gold' ? OT_GOLD : NT_BLUE;
+
+  if (highlightVid != null && !nodeIsLinkedTo(node.vid, highlightVid, graphLines)) {
+    return [base[0], base[1], base[2], 40];
+  }
+
+  return base;
 }
 
 export function CrossRefGraph({
   centerVid,
   edges,
   maxVotes,
+  minVotes = 0,
+  linkLayers = 1,
   highlightVid,
+  selectedVid,
   onHoverVid,
+  onSelectVid,
 }: CrossRefGraphProps) {
-  const [hoveredVid, setHoveredVid] = useState<number | null>(null);
+  const [webglError, setWebglError] = useState<string | null>(null);
+  const [viewState, setViewState] = useState<ViewState>({ target: [0, 0, 0], zoom: 0 });
+
+  const onHoverRef = useRef(onHoverVid);
+  const onSelectRef = useRef(onSelectVid);
+  onHoverRef.current = onHoverVid;
+  onSelectRef.current = onSelectVid;
 
   const graphData = useMemo(() => {
-    const graph = buildEgoGraph(centerVid, edges);
+    const graph = buildEgoGraph(centerVid, edges, minVotes);
     const nodes = layoutForceGraph(graph.nodes, graph.links, centerVid, maxVotes);
     const nodeMap = new Map(nodes.map((n) => [n.vid, n]));
 
@@ -85,10 +163,8 @@ export function CrossRefGraph({
         const to = nodeMap.get(link.toVid);
         if (!from || !to) return null;
         return {
-          x1: from.x,
-          y1: from.y,
-          x2: to.x,
-          y2: to.y,
+          source: [from.x, from.y] as [number, number],
+          target: [to.x, to.y] as [number, number],
           votes: link.votes,
           fromVid: link.fromVid,
           toVid: link.toVid,
@@ -97,128 +173,154 @@ export function CrossRefGraph({
       })
       .filter((row): row is LineDatum => row != null);
 
-    return { nodes, lines, bounds: computeBounds(nodes) };
-  }, [centerVid, edges, maxVotes]);
+    let maxCoord = 1;
+    for (const node of nodes) {
+      maxCoord = Math.max(maxCoord, Math.abs(node.x), Math.abs(node.y));
+    }
+    const zoom = Math.log2(520 / maxCoord) - 1;
 
-  const activeVid = highlightVid ?? hoveredVid;
+    return { nodes, lines, zoom };
+  }, [centerVid, edges, maxVotes, minVotes]);
+
+  useEffect(() => {
+    setViewState({ target: [0, 0, 0], zoom: graphData.zoom });
+    setWebglError(null);
+  }, [centerVid, minVotes, linkLayers, graphData.zoom]);
+
+  const { nodes, lines } = graphData;
+
+  const layers: Layer[] = [
+      new LineLayer<LineDatum>({
+        id: 'vav-edges',
+        data: lines,
+        getSourcePosition: (d) => d.source,
+        getTargetPosition: (d) => d.target,
+        getWidth: (d) => lineWidth(d, maxVotes, highlightVid),
+        widthUnits: 'pixels',
+        getColor: (d) => lineColor(d, highlightVid),
+        parameters: LAYER_PARAMETERS,
+        pickable: true,
+        updateTriggers: {
+          getColor: [highlightVid],
+          getWidth: [highlightVid],
+        },
+        onHover: (info) => {
+          if (!info.object) {
+            onHoverRef.current?.(null);
+            return;
+          }
+          const line = info.object as LineDatum;
+          onHoverRef.current?.(
+            line.fromVid === centerVid
+              ? line.toVid
+              : line.toVid === centerVid
+                ? line.fromVid
+                : line.toVid,
+          );
+        },
+      }),
+      new ScatterplotLayer<LayoutNode>({
+        id: 'vav-scatter-halo',
+        data: nodes,
+        getPosition: (d) => [d.x, d.y, 0],
+        getRadius: (d) => nodeRadius(d) + 3,
+        radiusUnits: 'pixels',
+        filled: true,
+        stroked: false,
+        billboard: true,
+        getFillColor: (d) => {
+          const [r, g, b] = nodeFillColor(d, highlightVid, selectedVid, lines);
+          return [r, g, b, 55] as [number, number, number, number];
+        },
+        parameters: LAYER_PARAMETERS,
+        pickable: false,
+        updateTriggers: {
+          getFillColor: [highlightVid, selectedVid, lines.length],
+        },
+      }),
+      new ScatterplotLayer<LayoutNode>({
+        id: 'vav-scatter-core',
+        data: nodes,
+        getPosition: (d) => [d.x, d.y, 0],
+        getRadius: (d) => nodeRadius(d),
+        radiusUnits: 'pixels',
+        radiusMinPixels: 4,
+        radiusMaxPixels: 18,
+        filled: true,
+        stroked: true,
+        billboard: true,
+        lineWidthUnits: 'pixels',
+        getLineWidth: () => 1,
+        getFillColor: (d) => nodeFillColor(d, highlightVid, selectedVid, lines),
+        getLineColor: [12, 18, 28, 255],
+        parameters: LAYER_PARAMETERS,
+        pickable: true,
+        onHover: (info) =>
+          onHoverRef.current?.(info.object ? (info.object as LayoutNode).vid : null),
+        onClick: (info) => {
+          if (info.object) onSelectRef.current?.((info.object as LayoutNode).vid);
+        },
+        updateTriggers: {
+          getFillColor: [highlightVid, selectedVid, lines.length],
+        },
+      }),
+    ];
+
+  const getTooltip = useCallback((info: PickingInfo) => {
+    if (!info.object) return null;
+    if ('votes' in (info.object as LineDatum)) {
+      const line = info.object as LineDatum;
+      return {
+        text: `${vidToRef(line.fromVid)} ↔ ${vidToRef(line.toVid)}\n${line.votes} votes`,
+      };
+    }
+    const node = info.object as LayoutNode;
+    return { text: `${vidToRef(node.vid)}\n${node.degree} links` };
+  }, []);
+
+  const activeVid = highlightVid ?? selectedVid;
   const tooltip = activeVid ? vidToRef(activeVid) : vidToRef(centerVid);
+  const deckKey = `${centerVid}-${minVotes}-${linkLayers}-${graphData.nodes.length}`;
 
-  const handleNodeHover = (vid: number | null) => {
-    setHoveredVid(vid);
-    onHoverVid?.(vid);
-  };
-
-  const { bounds } = graphData;
+  if (webglError) {
+    return (
+      <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field h-[500px] flex items-center justify-center p-6">
+        <p className="text-sm text-[var(--pw-text-muted)] text-center">
+          WebGL graph unavailable: {webglError}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden cross-ref-graph-field">
+    <div className="relative rounded-xl border border-[var(--pw-border)] overflow-hidden vav-graph-field">
       <div className="absolute top-2 left-3 z-10 text-[10px] uppercase tracking-widest text-[var(--pw-text-faint)] pointer-events-none">
-        Force layout · {graphData.nodes.length} nodes · {graphData.lines.length} edges · {tooltip}
+        Layer {linkLayers} · {graphData.nodes.length} nodes · {graphData.lines.length} edges · {tooltip}
       </div>
-      <div className="absolute bottom-2 left-3 z-10 flex gap-3 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
+      <div className="absolute bottom-2 left-3 z-10 flex flex-wrap gap-3 text-[10px] text-[var(--pw-text-faint)] pointer-events-none">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-[var(--pw-accent-gold)] inline-block" /> Verse node
+          <span className="w-3 h-3 rounded-full bg-[var(--pw-accent-gold)] inline-block" /> Old Testament
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-3 h-0.5 bg-[var(--pw-accent)] inline-block" /> TSK link (thicker = stronger)
+          <span className="w-3 h-3 rounded-full bg-[var(--pw-accent)] inline-block" /> New Testament
         </span>
+        <span className="text-[var(--pw-text-faint)]">Scroll to zoom · drag to pan · click node to select</span>
       </div>
 
-      <svg
-        viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
-        className="w-full h-[500px] block"
-        role="img"
-        aria-label={`Cross-reference graph for ${vidToRef(centerVid)}`}
-      >
-        <defs>
-          <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {graphData.lines.map((line) => (
-          <line
-            key={`${line.fromVid}-${line.toVid}-${line.kind}`}
-            x1={line.x1}
-            y1={line.y1}
-            x2={line.x2}
-            y2={line.y2}
-            stroke={line.kind === 'mesh' ? 'var(--pw-text-subtle)' : 'var(--pw-accent)'}
-            strokeOpacity={voteToOpacity(line.votes, maxVotes, line.kind)}
-            strokeWidth={voteToWidth(line.votes, maxVotes, line.kind)}
-            strokeLinecap="round"
-          />
-        ))}
-
-        {graphData.nodes.map((node) => {
-          const r = nodeRadius(node);
-          const isActive = node.vid === activeVid;
-          const isCenter = node.isCenter;
-          const fill = isActive
-            ? 'var(--pw-accent-gold)'
-            : isCenter
-              ? 'var(--pw-accent-gold)'
-              : 'var(--pw-accent)';
-          const label = vidToRef(node.vid);
-
-          return (
-            <g
-              key={node.vid}
-              className="cursor-pointer"
-              onMouseEnter={() => handleNodeHover(node.vid)}
-              onMouseLeave={() => handleNodeHover(null)}
-              onFocus={() => handleNodeHover(node.vid)}
-              onBlur={() => handleNodeHover(null)}
-              filter={isActive || isCenter ? 'url(#node-glow)' : undefined}
-            >
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={r + 6}
-                fill={fill}
-                opacity={0.2}
-              />
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={r}
-                fill={fill}
-                stroke="var(--pw-text)"
-                strokeOpacity={0.85}
-                strokeWidth={isCenter ? 2.5 : 1.5}
-              />
-              <text
-                x={node.x}
-                y={node.y - r - 8}
-                textAnchor="middle"
-                fill="var(--pw-text-soft)"
-                fontSize={isCenter ? 13 : 10}
-                fontWeight={isCenter ? 700 : 500}
-                fontFamily="system-ui, sans-serif"
-              >
-                {label}
-              </text>
-              {isCenter && (
-                <text
-                  x={node.x}
-                  y={node.y + 4}
-                  textAnchor="middle"
-                  fill="var(--pw-on-gold)"
-                  fontSize={9}
-                  fontWeight={700}
-                  fontFamily="system-ui, sans-serif"
-                >
-                  ●
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+      <DeckGL
+        key={deckKey}
+        views={ORTHO_VIEW}
+        viewState={viewState}
+        onViewStateChange={({ viewState: next }) => setViewState(next as ViewState)}
+        controller={{ scrollZoom: true, dragPan: true, dragRotate: false }}
+        layers={layers}
+        getTooltip={getTooltip}
+        onError={(error) => {
+          console.error('[Vav graph]', error);
+          setWebglError((prev) => prev ?? error?.message ?? 'WebGL initialization failed');
+        }}
+        style={{ width: '100%', height: '500px', position: 'relative', background: 'transparent' }}
+      />
     </div>
   );
 }

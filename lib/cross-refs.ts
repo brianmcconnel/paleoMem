@@ -1,4 +1,5 @@
 import { refToVid, vidToRef } from './verse-id';
+import { VAV_GRAPH_LIMITS, type VavGraphStats } from './vav-graph-limits';
 
 export type CrossRefEdge = {
   fromVid: number;
@@ -19,7 +20,6 @@ let outIndex: TopIndex = {};
 let inIndex: TopIndex = {};
 let meta: {
   maxVotes: number;
-  topN: number;
   source: string;
   edgeCount: number;
   sourceVerseCount: number;
@@ -53,14 +53,13 @@ export function getCrossRefMeta() {
   return meta;
 }
 
-export function lookupCrossRefs(ref: string, minVotes = 0, limit = 25): CrossRefLookup | null {
+export function lookupCrossRefs(ref: string, minVotes = 0): CrossRefLookup | null {
   ensureLoaded();
   const vid = refToVid(ref);
   if (vid == null) return null;
 
   const outgoing = (outIndex[String(vid)] ?? [])
     .filter(([, votes]) => votes >= minVotes)
-    .slice(0, limit)
     .map(([toVid, votes]) => ({
       fromVid: vid,
       toVid,
@@ -70,7 +69,6 @@ export function lookupCrossRefs(ref: string, minVotes = 0, limit = 25): CrossRef
 
   const incoming = (inIndex[String(vid)] ?? [])
     .filter(([, votes]) => votes >= minVotes)
-    .slice(0, limit)
     .map(([fromVid, votes]) => ({
       fromVid,
       toVid: vid,
@@ -88,28 +86,175 @@ export function lookupCrossRefs(ref: string, minVotes = 0, limit = 25): CrossRef
   return { outgoing, incoming, maxVotes };
 }
 
-export function edgesForGraph(
-  ref: string,
-  minVotes = 0,
-  limit = 20,
-): { centerVid: number; edges: CrossRefEdge[] } | null {
-  const lookup = lookupCrossRefs(ref, minVotes, limit);
-  if (!lookup) return null;
-  const vid = refToVid(ref);
-  if (vid == null) return null;
+function edgesForVid(vid: number, minVotes: number): CrossRefEdge[] {
+  const outgoing = (outIndex[String(vid)] ?? [])
+    .filter(([, votes]) => votes >= minVotes)
+    .map(([toVid, votes]) => ({
+      fromVid: vid,
+      toVid,
+      votes,
+      direction: 'out' as const,
+    }));
+
+  const incoming = (inIndex[String(vid)] ?? [])
+    .filter(([, votes]) => votes >= minVotes)
+    .map(([fromVid, votes]) => ({
+      fromVid,
+      toVid: vid,
+      votes,
+      direction: 'in' as const,
+    }));
 
   const seen = new Set<string>();
   const edges: CrossRefEdge[] = [];
-
-  for (const edge of [...lookup.outgoing, ...lookup.incoming]) {
+  for (const edge of [...outgoing, ...incoming]) {
     const key = `${edge.fromVid}-${edge.toVid}`;
     if (seen.has(key)) continue;
     seen.add(key);
     edges.push(edge);
   }
+  return edges;
+}
+
+export function edgesForGraph(
+  ref: string,
+  minVotes = 0,
+): { centerVid: number; edges: CrossRefEdge[] } | null {
+  const layered = edgesForLayeredGraph(ref, minVotes, 1);
+  if (!layered) return null;
+  return { centerVid: layered.centerVid, edges: layered.edges };
+}
+
+function edgeNeighbor(edge: CrossRefEdge, vid: number): number {
+  return edge.fromVid === vid ? edge.toVid : edge.fromVid;
+}
+
+/** BFS expansion with hard caps — layer 2+ can reach thousands of verses without limits. */
+export function edgesForLayeredGraph(
+  ref: string,
+  minVotes = 0,
+  linkLayers = 1,
+): { centerVid: number; edges: CrossRefEdge[]; maxVotes: number; stats: VavGraphStats } | null {
+  ensureLoaded();
+  const centerVid = refToVid(ref);
+  if (centerVid == null) return null;
+
+  const {
+    maxNodes,
+    maxPrimaryEdges,
+    maxLinkLayers,
+    layer2EdgesPerNode,
+    maxFrontierPerLayer,
+  } = VAV_GRAPH_LIMITS;
+
+  const layers = Math.max(1, Math.min(maxLinkLayers, linkLayers));
+  const seen = new Set<string>();
+  const edges: CrossRefEdge[] = [];
+  const nodes = new Set<number>([centerVid]);
+  let maxVotes = 0;
+  let truncated = false;
+
+  const tryAddEdge = (edge: CrossRefEdge): boolean => {
+    const key = `${edge.fromVid}-${edge.toVid}`;
+    if (seen.has(key)) return false;
+    if (edges.length >= maxPrimaryEdges) {
+      truncated = true;
+      return false;
+    }
+    seen.add(key);
+    edges.push(edge);
+    maxVotes = Math.max(maxVotes, edge.votes);
+    nodes.add(edge.fromVid);
+    nodes.add(edge.toVid);
+    return true;
+  };
+
+  const centerEdges = edgesForVid(centerVid, minVotes).sort((a, b) => b.votes - a.votes);
+  for (const edge of centerEdges) {
+    if (edges.length >= maxPrimaryEdges) {
+      truncated = true;
+      break;
+    }
+    const neighbor = edgeNeighbor(edge, centerVid);
+    if (!nodes.has(neighbor) && nodes.size >= maxNodes) {
+      truncated = true;
+      continue;
+    }
+    tryAddEdge(edge);
+  }
+
+  let frontier = [...new Set(edges.map((e) => edgeNeighbor(e, centerVid)).filter((v) => v !== centerVid))];
+
+  for (let layer = 2; layer <= layers; layer += 1) {
+    if (!frontier.length || nodes.size >= maxNodes || edges.length >= maxPrimaryEdges) break;
+
+    const nextFrontier: number[] = [];
+    const sortedFrontier = [...frontier].sort((a, b) => {
+      const best = (vid: number) =>
+        Math.max(
+          ...edgesForVid(vid, minVotes)
+            .filter((e) => nodes.has(edgeNeighbor(e, vid)))
+            .map((e) => e.votes),
+          0,
+        );
+      return best(b) - best(a);
+    });
+
+    for (const vid of sortedFrontier.slice(0, maxFrontierPerLayer)) {
+      if (nodes.size >= maxNodes || edges.length >= maxPrimaryEdges) {
+        truncated = true;
+        break;
+      }
+
+      const vidEdges = edgesForVid(vid, minVotes)
+        .sort((a, b) => b.votes - a.votes)
+        .slice(0, layer2EdgesPerNode);
+
+      for (const edge of vidEdges) {
+        if (edges.length >= maxPrimaryEdges) {
+          truncated = true;
+          break;
+        }
+
+        const neighbor = edgeNeighbor(edge, vid);
+        const neighborKnown = nodes.has(neighbor);
+        if (!neighborKnown && nodes.size >= maxNodes) {
+          truncated = true;
+          continue;
+        }
+
+        const added = tryAddEdge(edge);
+        if (added && !neighborKnown) {
+          nextFrontier.push(neighbor);
+        }
+      }
+    }
+
+    frontier = nextFrontier;
+    if (layer < layers && frontier.length > maxFrontierPerLayer) {
+      truncated = true;
+    }
+  }
+
+  if (linkLayers > maxLinkLayers) truncated = true;
 
   edges.sort((a, b) => b.votes - a.votes);
-  return { centerVid: vid, edges: edges.slice(0, limit) };
+
+  const message = truncated
+    ? `Showing up to ${maxNodes} verses and ${maxPrimaryEdges} links. Raise min votes or use fewer layers for a clearer graph.`
+    : null;
+
+  return {
+    centerVid,
+    edges,
+    maxVotes: Math.max(maxVotes, meta?.maxVotes ?? 0),
+    stats: {
+      nodeCount: nodes.size,
+      edgeCount: edges.length,
+      truncated,
+      message,
+    },
+  };
 }
 
 export function formatCrossRefEdge(edge: CrossRefEdge): string {

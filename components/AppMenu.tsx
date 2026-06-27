@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { scrollToSection } from '../lib/scroll-section';
 
-export type AppMenuVariant = 'paleo' | 'koine';
+export type AppMenuVariant = 'paleo' | 'koine' | 'vav';
 
 interface AppMenuProps {
   variant: AppMenuVariant;
@@ -20,7 +20,7 @@ type MenuItem =
 const APP_LINKS: MenuItem[] = [
   { type: 'link', label: 'paleoMem (OT)', href: '/' },
   { type: 'link', label: 'koineHydata (NT)', href: '/koine' },
-  { type: 'link', label: 'Cross-References', href: '/cross-refs' },
+  { type: 'link', label: 'Vav', href: '/vav' },
 ];
 
 const PALEO_SECTIONS: MenuItem[] = [
@@ -38,8 +38,14 @@ const KOINE_SECTIONS: MenuItem[] = [
 ];
 
 function buildMenuItems(variant: AppMenuVariant): MenuItem[] {
-  const sections = variant === 'koine' ? KOINE_SECTIONS : PALEO_SECTIONS;
-  const badge = variant === 'koine' ? 'New Testament' : 'Old Testament';
+  const sections =
+    variant === 'koine' ? KOINE_SECTIONS : variant === 'vav' ? [] : PALEO_SECTIONS;
+  const badge =
+    variant === 'koine'
+      ? 'New Testament'
+      : variant === 'vav'
+        ? 'Old & New Testament'
+        : 'Old Testament';
 
   return [
     { type: 'link', label: 'Settings', href: '/settings' },
@@ -83,7 +89,9 @@ export function AppMenu({ variant }: AppMenuProps) {
   const accentClass =
     variant === 'koine'
       ? 'hover:text-[var(--pw-accent)]'
-      : 'hover:text-[var(--pw-accent-gold)]';
+      : variant === 'vav'
+        ? 'hover:text-[var(--pw-vav-accent)]'
+        : 'hover:text-[var(--pw-accent-gold)]';
 
   const close = () => setOpen(false);
 

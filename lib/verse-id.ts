@@ -30,3 +30,12 @@ export function vidToRef(vid: number): string {
 export function vidToBookNum(vid: number): number {
   return Math.floor(vid / 1_000_000);
 }
+
+export function isNewTestamentVid(vid: number): boolean {
+  return vidToBookNum(vid) > OT_BOOKS.length;
+}
+
+/** OT verses use gold; NT verses use blue (site accent). */
+export function verseAccentColor(vid: number): 'gold' | 'blue' {
+  return isNewTestamentVid(vid) ? 'blue' : 'gold';
+}
