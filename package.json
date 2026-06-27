@@ -18,9 +18,13 @@
     "verify:display": "node scripts/verify-display.js --write-report",
     "data:fetch:greek": "node scripts/fetch-greek-nt.js",
     "data:fetch:red-letter": "node scripts/fetch-red-letter.js",
-    "data:fetch": "node scripts/fetch-bible-data.js && node scripts/fetch-hebrew-ot.js && node scripts/convert-strongs.js && npm run data:fetch:greek && npm run data:fetch:red-letter"
+    "data:fetch:cross-refs": "node scripts/fetch-cross-references.js",
+    "data:fetch": "node scripts/fetch-bible-data.js && node scripts/fetch-hebrew-ot.js && node scripts/convert-strongs.js && npm run data:fetch:greek && npm run data:fetch:red-letter && npm run data:fetch:cross-refs"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.3.5",
+    "@deck.gl/layers": "^9.3.5",
+    "@deck.gl/react": "^9.3.5",
     "lucide-react": "^1.21.0",
     "next": "16.2.9",
     "react": "19.2.4",
